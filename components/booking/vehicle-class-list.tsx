@@ -60,7 +60,7 @@ export function VehicleClassList({
     const track = trackRef.current;
     if (!track) return;
     const firstCard = track.querySelector<HTMLElement>("[data-vehicle-card]");
-    const step = firstCard ? firstCard.offsetWidth + GAP_PX : track.clientWidth / 3;
+    const step = firstCard ? firstCard.offsetWidth + GAP_PX : track.clientWidth / 2;
     track.scrollBy({ left: direction * step, behavior: "smooth" });
   };
 
@@ -77,7 +77,7 @@ export function VehicleClassList({
             <li
               key={vehicleClass.id}
               data-vehicle-card
-              className="w-[min(85%,20rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]">
+              className="w-[min(85%,20rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)]">
               <button
                 type="button"
                 onClick={() => onSelect(vehicleClass.id)}
@@ -95,7 +95,7 @@ export function VehicleClassList({
                       alt=""
                       fill
                       className="object-cover"
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 85vw"
+                      sizes="(min-width: 640px) 50vw, 85vw"
                     />
                   ) : null}
                 </div>

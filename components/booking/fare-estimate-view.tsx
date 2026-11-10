@@ -80,29 +80,31 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
 
   return (
     <div className="pb-28 lg:pb-8">
-      <div className="border-border bg-background sticky top-16 z-30 border-b py-1.5">
-        <BookingStepsBar step="estimate" />
-      </div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+        <div className="min-w-0">
+          <div className="border-border bg-background sticky top-16 z-30 border-b py-1.5">
+            <BookingStepsBar step="estimate" />
+          </div>
 
-      <div className="space-y-8 pt-3">
-        {pricingNotice ? (
-          <p className="border-border bg-muted/40 border px-4 py-3 text-sm">{pricingNotice}</p>
-        ) : null}
-        {quoteError ? <p className="text-destructive text-sm">{quoteError}</p> : null}
+          <div className="space-y-8 pt-3">
+            {pricingNotice ? (
+              <p className="border-border bg-muted/40 border px-4 py-3 text-sm">{pricingNotice}</p>
+            ) : null}
+            {quoteError ? <p className="text-destructive text-sm">{quoteError}</p> : null}
 
-        <section className="space-y-3">
-          <h2 className="font-heading text-2xl tracking-tight sm:text-3xl">Choose your experience</h2>
-          <VehicleClassList
-            classes={classes}
-            selectedId={selectedVehicleClassId}
-            onSelect={selectVehicleClass}
-            quoteTotal={quote?.displayTotal ?? null}
-            currencyCode={quote?.currencyCode ?? "AUD"}
-          />
-        </section>
+            <section className="space-y-3">
+              <h2 className="font-heading text-2xl tracking-tight sm:text-3xl">
+                Choose your experience
+              </h2>
+              <VehicleClassList
+                classes={classes}
+                selectedId={selectedVehicleClassId}
+                onSelect={selectVehicleClass}
+                quoteTotal={quote?.displayTotal ?? null}
+                currencyCode={quote?.currencyCode ?? "AUD"}
+              />
+            </section>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
-          <div className="min-w-0 space-y-8">
             {selected ? (
               <section id="vehicle-class-details" className="scroll-mt-28 space-y-3">
                 <h2 className="text-lg font-medium">What’s included</h2>
@@ -138,51 +140,51 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
               />
             </section>
           </div>
-
-          <aside
-            className={cn(
-              "border-border bg-background space-y-4 border p-4",
-              "lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto"
-            )}>
-            <RouteMap
-              pickup={pickup?.coordinate ?? null}
-              dropoff={dropoff?.coordinate ?? null}
-              geometry={route?.geometry ?? null}
-            />
-
-            {selected ? (
-              <p className="font-medium">{selected.displayName}</p>
-            ) : (
-              <p className="text-muted-foreground text-sm">Select a vehicle class</p>
-            )}
-
-            {quote ? (
-              <QuoteBreakdown quote={quote} route={route} />
-            ) : pickup && dropoff && (isRouting || isQuoting) ? (
-              <p className="text-muted-foreground text-sm">Calculating route and fare…</p>
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                Enter pickup and drop-off to see an estimate.
-              </p>
-            )}
-
-            <p className="text-muted-foreground text-xs">
-              All amounts are estimates. Final fare is confirmed at booking.
-            </p>
-
-            <Link
-              href={canContinue ? "/booking/details" : "#"}
-              aria-disabled={!canContinue}
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "hidden w-full justify-between lg:inline-flex",
-                !canContinue && "pointer-events-none opacity-45"
-              )}>
-              <span>Book now</span>
-              <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
-            </Link>
-          </aside>
         </div>
+
+        <aside
+          className={cn(
+            "border-border bg-background space-y-4 border p-4",
+            "lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto"
+          )}>
+          <RouteMap
+            pickup={pickup?.coordinate ?? null}
+            dropoff={dropoff?.coordinate ?? null}
+            geometry={route?.geometry ?? null}
+          />
+
+          {selected ? (
+            <p className="font-medium">{selected.displayName}</p>
+          ) : (
+            <p className="text-muted-foreground text-sm">Select a vehicle class</p>
+          )}
+
+          {quote ? (
+            <QuoteBreakdown quote={quote} route={route} />
+          ) : pickup && dropoff && (isRouting || isQuoting) ? (
+            <p className="text-muted-foreground text-sm">Calculating route and fare…</p>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Enter pickup and drop-off to see an estimate.
+            </p>
+          )}
+
+          <p className="text-muted-foreground text-xs">
+            All amounts are estimates. Final fare is confirmed at booking.
+          </p>
+
+          <Link
+            href={canContinue ? "/booking/details" : "#"}
+            aria-disabled={!canContinue}
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "hidden w-full justify-between lg:inline-flex",
+              !canContinue && "pointer-events-none opacity-45"
+            )}>
+            <span>Book now</span>
+            <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
+          </Link>
+        </aside>
       </div>
 
       <div className="border-border bg-background fixed inset-x-0 bottom-0 border-t px-4 py-4 lg:hidden">
