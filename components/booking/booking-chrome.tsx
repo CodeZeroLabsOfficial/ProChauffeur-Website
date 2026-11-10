@@ -1,3 +1,5 @@
+"use client";
+
 import { EstimateTripStrip } from "@/components/booking/estimate-trip-strip";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { cn } from "@/lib/utils";

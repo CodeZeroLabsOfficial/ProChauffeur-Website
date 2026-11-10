@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ChevronDown } from "lucide-react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { AddressSearchField } from "@/components/booking/address-search-field";
 import { HeroDateTimeField } from "@/components/marketing/hero-date-time-field";
@@ -49,6 +49,7 @@ export function EstimateTripStrip() {
 
   const [itineraryOpen, setItineraryOpen] = useState(false);
   const [thumb, setThumb] = useState({ left: 0, width: 0, ready: false });
+  const [hasMounted, setHasMounted] = useState(false);
   const groupRef = useRef<HTMLDivElement>(null);
   const transferRef = useRef<HTMLButtonElement>(null);
   const hourlyRef = useRef<HTMLButtonElement>(null);
@@ -57,6 +58,10 @@ export function EstimateTripStrip() {
   const isTransfer = tripType === "transfer";
   const isReturn = isTransfer && itinerary === "return";
   const transferLabel = itinerary === "return" ? "Return" : "One-way";
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useLayoutEffect(() => {
     const active = isTransfer ? transferRef.current : hourlyRef.current;
@@ -94,6 +99,14 @@ export function EstimateTripStrip() {
     if (scheduledReturnAt && scheduledReturnAt.getTime() < next.getTime()) {
       setScheduledReturnAt(defaultReturnDate(next));
     }
+  }
+
+  if (!hasMounted) {
+    return (
+      <div className="border-b border-white/10 bg-neutral-950 px-4 py-4 text-white lg:px-6">
+        <div className="mx-auto h-[7.5rem] w-full max-w-6xl" aria-hidden />
+      </div>
+    );
   }
 
   return (

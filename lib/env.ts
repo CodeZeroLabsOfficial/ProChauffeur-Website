@@ -54,7 +54,13 @@ export function getMapboxToken(): string {
       "Missing NEXT_PUBLIC_MAPBOX_TOKEN. Add it to .env.local (URL-restrict in Mapbox)."
     );
   }
-  return parsed.data.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const token = parsed.data.NEXT_PUBLIC_MAPBOX_TOKEN.trim();
+  if (!token.startsWith("pk.")) {
+    throw new Error(
+      "NEXT_PUBLIC_MAPBOX_TOKEN must be a public token (pk.*), not a secret token (sk.*)."
+    );
+  }
+  return token;
 }
 
 /** Cloud Functions region for this stamp. */
