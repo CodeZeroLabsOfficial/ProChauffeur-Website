@@ -50,10 +50,13 @@ type BookingStore = {
   selectedVehicleClassId: string | null;
   selectedAddonIds: string[];
   availableAddons: PricingAddon[];
+  catalogAddons: PricingAddon[];
 
   route: RouteEstimate | null;
   isRouting: boolean;
   quote: QuoteResult | null;
+  /** Per-class quotes (no add-ons) for cards and instant class switching. */
+  classQuotes: Record<string, QuoteResult>;
   isQuoting: boolean;
   quoteError: string | null;
 
@@ -79,6 +82,7 @@ type BookingStore = {
   selectVehicleClass: (id: string) => void;
   toggleAddon: (id: string) => void;
   refreshRouteAndQuote: () => Promise<void>;
+  refreshSelectedQuote: () => Promise<void>;
   bookableVehicleClasses: () => VehicleClass[];
   selectedVehicleClass: () => VehicleClass | null;
   canProceedFromEstimate: () => boolean;
@@ -142,6 +146,8 @@ function reselectVehicleIfNeeded(
   }
 }
 
+let quoteRequestSeq = 0;
+
 export const useBookingStore = create<BookingStore>((set, get) => ({
   ready: false,
   bootError: null,
@@ -167,10 +173,12 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   selectedVehicleClassId: null,
   selectedAddonIds: [],
   availableAddons: [],
+  catalogAddons: [],
 
   route: null,
   isRouting: false,
   quote: null,
+  classQuotes: {},
   isQuoting: false,
   quoteError: null,
 
@@ -253,17 +261,17 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   },
 
   setPickup(place) {
-    set({ pickup: place, quote: null, quoteError: null });
+    set({ pickup: place, quoteError: null });
     void get().refreshRouteAndQuote();
   },
 
   setDropoff(place) {
-    set({ dropoff: place, quote: null, quoteError: null });
+    set({ dropoff: place, quoteError: null });
     void get().refreshRouteAndQuote();
   },
 
   setScheduledPickupAt(date) {
-    set({ scheduledPickupAt: date, quote: null });
+    set({ scheduledPickupAt: date });
     void get().refreshRouteAndQuote();
   },
 
@@ -275,8 +283,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     set({
       tripType,
       itinerary: tripType === "hourly" ? "oneWay" : get().itinerary,
-      scheduledReturnAt: tripType === "hourly" ? null : get().scheduledReturnAt,
-      quote: null
+      scheduledReturnAt: tripType === "hourly" ? null : get().scheduledReturnAt
     });
     void get().refreshRouteAndQuote();
   },
@@ -290,24 +297,24 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   },
 
   setHourlyHours(hours) {
-    set({ hourlyHours: Math.max(1, hours), quote: null });
+    set({ hourlyHours: Math.max(1, hours) });
     void get().refreshRouteAndQuote();
   },
 
   setPassengers(count) {
-    set({ passengers: Math.max(1, count), quote: null });
+    set({ passengers: Math.max(1, count) });
     reselectVehicleIfNeeded(get, set);
     void get().refreshRouteAndQuote();
   },
 
   setSmallLuggage(count) {
-    set({ smallLuggage: Math.max(0, count), quote: null });
+    set({ smallLuggage: Math.max(0, count) });
     reselectVehicleIfNeeded(get, set);
     void get().refreshRouteAndQuote();
   },
 
   setLargeLuggage(count) {
-    set({ largeLuggage: Math.max(0, count), quote: null });
+    set({ largeLuggage: Math.max(0, count) });
     reselectVehicleIfNeeded(get, set);
     void get().refreshRouteAndQuote();
   },
@@ -334,15 +341,68 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   },
 
   selectVehicleClass(id) {
-    set({ selectedVehicleClassId: id, selectedAddonIds: [], quote: null });
-    void get().refreshRouteAndQuote();
+    const state = get();
+    if (state.selectedVehicleClassId === id) return;
+
+    const availableAddons = filterAddonsForSelection(
+      state.catalogAddons,
+      state.tripType,
+      id
+    );
+    const cached = state.classQuotes[id] ?? null;
+    set({
+      selectedVehicleClassId: id,
+      selectedAddonIds: [],
+      availableAddons,
+      quote: cached ?? state.quote
+    });
   },
 
   toggleAddon(id) {
     const current = get().selectedAddonIds;
     const next = current.includes(id) ? current.filter((row) => row !== id) : [...current, id];
-    set({ selectedAddonIds: next, quote: null });
-    void get().refreshRouteAndQuote();
+    set({ selectedAddonIds: next });
+    void get().refreshSelectedQuote();
+  },
+
+  async refreshSelectedQuote() {
+    const state = get();
+    const pickup = state.pickup;
+    const dropoff = state.dropoff;
+    const vehicleClassId = state.selectedVehicleClassId;
+    const branchId = state.branchId;
+    if (!pickup || !dropoff || !vehicleClassId || !branchId) return;
+
+    const requestId = ++quoteRequestSeq;
+    set({ isQuoting: true, quoteError: null });
+
+    try {
+      if (state.selectedAddonIds.length === 0) {
+        const cached = state.classQuotes[vehicleClassId] ?? null;
+        if (requestId !== quoteRequestSeq) return;
+        set({ quote: cached, isQuoting: false, quoteError: null });
+        return;
+      }
+
+      const quote = await buildTripQuoteRemote({
+        branchId,
+        tripType: state.tripType,
+        vehicleClassId,
+        pickup: pickup.coordinate,
+        dropoff: dropoff.coordinate,
+        pickupAddressLine: pickup.addressLine,
+        dropoffAddressLine: dropoff.addressLine,
+        scheduledPickupAt: state.scheduledPickupAt,
+        bookedHours: state.tripType === "hourly" ? state.hourlyHours : null,
+        addonIds: state.selectedAddonIds
+      });
+      if (requestId !== quoteRequestSeq) return;
+      set({ quote, isQuoting: false, quoteError: null });
+    } catch (error) {
+      if (requestId !== quoteRequestSeq) return;
+      const message = error instanceof Error ? error.message : "Could not update the estimate.";
+      set({ isQuoting: false, quoteError: message });
+    }
   },
 
   async refreshRouteAndQuote() {
@@ -351,12 +411,15 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     const dropoff = state.dropoff;
 
     if (!pickup || !dropoff) {
+      quoteRequestSeq += 1;
       set({
         route: null,
         quote: null,
+        classQuotes: {},
         branchId: null,
         vehicleClasses: [],
         availableAddons: [],
+        catalogAddons: [],
         isPickupOutsideServiceArea: false,
         pricingNotice: null,
         isRouting: false,
@@ -365,6 +428,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       return;
     }
 
+    const requestId = ++quoteRequestSeq;
     set({ isRouting: true, quoteError: null, pricingNotice: null });
 
     try {
@@ -378,14 +442,17 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         });
       } catch (error) {
         if (error instanceof BranchResolveError) {
+          if (requestId !== quoteRequestSeq) return;
           set({
             isPickupOutsideServiceArea: error.kind === "out_of_area",
             pricingNotice: error.message,
             branchId: null,
             vehicleClasses: [],
             availableAddons: [],
+            catalogAddons: [],
             route: null,
             quote: null,
+            classQuotes: {},
             isRouting: false,
             isQuoting: false
           });
@@ -409,6 +476,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
           largeLuggage
         })
       ]);
+
+      if (requestId !== quoteRequestSeq) return;
 
       const vehicleClasses = catalog.vehicleClasses;
       const bookable = filterEligibleVehicleClasses(vehicleClasses, {
@@ -441,15 +510,17 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         vehicleClasses,
         selectedVehicleClassId,
         availableAddons,
+        catalogAddons: catalog.addons,
         selectedAddonIds,
         route,
         isPickupOutsideServiceArea: false,
         isRouting: false
       });
 
-      if (!selectedVehicleClassId) {
+      if (!selectedVehicleClassId || bookable.length === 0) {
         set({
           quote: null,
+          classQuotes: {},
           pricingNotice: "No vehicle classes are available for this trip.",
           isQuoting: false
         });
@@ -457,25 +528,60 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       }
 
       set({ isQuoting: true });
-      const quote = await buildTripQuoteRemote({
+      const scheduledPickupAt = get().scheduledPickupAt;
+      const bookedHours = tripType === "hourly" ? get().hourlyHours : null;
+      const quoteBase = {
         branchId,
         tripType,
-        vehicleClassId: selectedVehicleClassId,
         pickup: pickup.coordinate,
         dropoff: dropoff.coordinate,
         pickupAddressLine: pickup.addressLine,
         dropoffAddressLine: dropoff.addressLine,
-        scheduledPickupAt: get().scheduledPickupAt,
-        bookedHours: tripType === "hourly" ? get().hourlyHours : null,
-        addonIds: selectedAddonIds
+        scheduledPickupAt,
+        bookedHours
+      } as const;
+
+      const quoted = await Promise.all(
+        bookable.map(async (vehicleClass) => {
+          const result = await buildTripQuoteRemote({
+            ...quoteBase,
+            vehicleClassId: vehicleClass.id,
+            addonIds: []
+          });
+          return { vehicleClassId: vehicleClass.id, quote: result };
+        })
+      );
+
+      if (requestId !== quoteRequestSeq) return;
+
+      const classQuotes: Record<string, QuoteResult> = {};
+      for (const row of quoted) {
+        classQuotes[row.vehicleClassId] = row.quote;
+      }
+
+      let selectedQuote = classQuotes[selectedVehicleClassId] ?? null;
+      if (selectedAddonIds.length > 0) {
+        selectedQuote = await buildTripQuoteRemote({
+          ...quoteBase,
+          vehicleClassId: selectedVehicleClassId,
+          addonIds: selectedAddonIds
+        });
+        if (requestId !== quoteRequestSeq) return;
+      }
+
+      set({
+        quote: selectedQuote,
+        classQuotes,
+        isQuoting: false,
+        quoteError: null,
+        pricingNotice: null
       });
-      set({ quote, isQuoting: false, quoteError: null, pricingNotice: null });
     } catch (error) {
+      if (requestId !== quoteRequestSeq) return;
       const message = error instanceof Error ? error.message : "Could not update the estimate.";
       set({
         isRouting: false,
         isQuoting: false,
-        quote: null,
         quoteError: message
       });
     }

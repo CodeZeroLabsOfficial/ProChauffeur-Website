@@ -15,7 +15,7 @@ type VehicleClassListProps = {
   classes: VehicleClass[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  quoteTotal?: number | null;
+  quoteTotals?: Record<string, number>;
   currencyCode?: string;
 };
 
@@ -23,7 +23,7 @@ export function VehicleClassList({
   classes,
   selectedId,
   onSelect,
-  quoteTotal = null,
+  quoteTotals = {},
   currencyCode = "AUD"
 }: VehicleClassListProps) {
   const trackRef = useRef<HTMLUListElement>(null);
@@ -60,7 +60,7 @@ export function VehicleClassList({
     const track = trackRef.current;
     if (!track) return;
     const firstCard = track.querySelector<HTMLElement>("[data-vehicle-card]");
-    const step = firstCard ? firstCard.offsetWidth + GAP_PX : track.clientWidth / 2;
+    const step = firstCard ? firstCard.offsetWidth + GAP_PX : track.clientWidth / 3;
     track.scrollBy({ left: direction * step, behavior: "smooth" });
   };
 
@@ -73,14 +73,12 @@ export function VehicleClassList({
         className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {classes.map((vehicleClass) => {
           const isSelected = vehicleClass.id === selectedId;
-          const luggageTotal =
-            vehicleClass.capacity.luggage.smallCount +
-            vehicleClass.capacity.luggage.largeCount;
+          const quoteTotal = quoteTotals[vehicleClass.id];
           return (
             <li
               key={vehicleClass.id}
               data-vehicle-card
-              className="w-[min(85%,18rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)]">
+              className="w-[min(85%,18rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]">
               <button
                 type="button"
                 onClick={() => onSelect(vehicleClass.id)}
@@ -91,21 +89,21 @@ export function VehicleClassList({
                     ? "border-foreground ring-foreground/15 ring-2"
                     : "border-border hover:border-foreground/40"
                 )}>
-                <div className="bg-muted relative aspect-square w-full overflow-hidden">
+                <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden">
                   {vehicleClass.imageUrl ? (
                     <Image
                       src={vehicleClass.imageUrl}
                       alt=""
                       fill
-                      className="object-cover"
-                      sizes="(min-width: 640px) 50vw, 85vw"
+                      className="object-cover object-center"
+                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 40vw, 85vw"
                     />
                   ) : null}
                 </div>
                 <div className="space-y-2 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium leading-tight">{vehicleClass.displayName}</p>
-                    {isSelected && quoteTotal != null ? (
+                    {quoteTotal != null ? (
                       <p className="shrink-0 text-sm font-medium tabular-nums">
                         {formatMoney(quoteTotal, currencyCode)}
                       </p>
@@ -118,7 +116,11 @@ export function VehicleClassList({
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <Briefcase className="size-3.5" aria-hidden />
-                      {luggageTotal}
+                      {vehicleClass.capacity.luggage.smallCount} small
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Briefcase className="size-3.5" aria-hidden />
+                      {vehicleClass.capacity.luggage.largeCount} large
                     </span>
                   </div>
                 </div>

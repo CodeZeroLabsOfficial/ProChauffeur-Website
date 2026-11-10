@@ -35,9 +35,8 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
   const pricingNotice = useBookingStore((s) => s.pricingNotice);
   const quoteError = useBookingStore((s) => s.quoteError);
   const route = useBookingStore((s) => s.route);
-  const isRouting = useBookingStore((s) => s.isRouting);
-  const isQuoting = useBookingStore((s) => s.isQuoting);
   const quote = useBookingStore((s) => s.quote);
+  const classQuotes = useBookingStore((s) => s.classQuotes);
   const selectedVehicleClassId = useBookingStore((s) => s.selectedVehicleClassId);
   const selectVehicleClass = useBookingStore((s) => s.selectVehicleClass);
   const availableAddons = useBookingStore((s) => s.availableAddons);
@@ -59,7 +58,14 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
 
   const classes = bookableVehicleClasses();
   const selected = selectedVehicleClass();
-  const canContinue = canProceedFromEstimate() && !isRouting && !isQuoting;
+  const canContinue = canProceedFromEstimate();
+  const classQuoteTotals = Object.fromEntries(
+    Object.entries(classQuotes).map(([id, row]) => [id, row.displayTotal])
+  );
+  const classQuoteCurrency =
+    quote?.currencyCode ??
+    Object.values(classQuotes)[0]?.currencyCode ??
+    "AUD";
 
   if (bootError) {
     return (
@@ -105,8 +111,8 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
                 classes={classes}
                 selectedId={selectedVehicleClassId}
                 onSelect={selectVehicleClass}
-                quoteTotal={quote?.displayTotal ?? null}
-                currencyCode={quote?.currencyCode ?? "AUD"}
+                quoteTotals={classQuoteTotals}
+                currencyCode={quote?.currencyCode ?? classQuoteCurrency}
               />
             </section>
 
@@ -170,7 +176,7 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
         <aside
           className={cn(
             "border-border bg-background space-y-4 border p-4",
-            "lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto"
+            "lg:mt-10 lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto"
           )}>
           <RouteMap
             pickup={pickup?.coordinate ?? null}
@@ -178,16 +184,24 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
             geometry={route?.geometry ?? null}
           />
 
-          {selected ? (
-            <p className="font-medium">{selected.displayName}</p>
-          ) : (
-            <p className="text-muted-foreground text-sm">Select a vehicle class</p>
-          )}
+          <div className="flex items-start justify-between gap-3">
+            {selected ? (
+              <p className="font-medium">{selected.displayName}</p>
+            ) : (
+              <p className="text-muted-foreground text-sm">Select a vehicle class</p>
+            )}
+            {quote ? (
+              <p className="shrink-0 text-sm font-medium tabular-nums">
+                {formatMoney(
+                  Math.max(0, quote.displayTotal - quote.taxAmount),
+                  quote.currencyCode
+                )}
+              </p>
+            ) : null}
+          </div>
 
           {quote ? (
-            <QuoteBreakdown quote={quote} route={route} />
-          ) : pickup && dropoff && (isRouting || isQuoting) ? (
-            <p className="text-muted-foreground text-sm">Calculating route and fare…</p>
+            <QuoteBreakdown quote={quote} />
           ) : (
             <p className="text-muted-foreground text-sm">
               Enter pickup and drop-off to see an estimate.

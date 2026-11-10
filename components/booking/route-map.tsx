@@ -30,12 +30,9 @@ export function RouteMap({ pickup, dropoff, geometry }: RouteMapProps) {
         style: "mapbox://styles/mapbox/light-v11",
         center: [151.2093, -33.8688],
         zoom: 10,
-        attributionControl: false
+        attributionControl: false,
+        interactive: false
       });
-      mapRef.current.addControl(
-        new mapboxgl.NavigationControl({ showCompass: false }),
-        "top-right"
-      );
       setMapError(null);
     } catch (error) {
       setMapError(error instanceof Error ? error.message : "Map could not load.");
@@ -86,7 +83,7 @@ export function RouteMap({ pickup, dropoff, geometry }: RouteMapProps) {
         const bounds = new mapboxgl.LngLatBounds();
         geometry.coordinates.forEach((coord) => bounds.extend(coord));
         if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, { padding: 48, duration: 600 });
+          map.fitBounds(bounds, { padding: 48, duration: 0 });
         }
       }
 
@@ -121,5 +118,11 @@ export function RouteMap({ pickup, dropoff, geometry }: RouteMapProps) {
     );
   }
 
-  return <div ref={containerRef} className="border-border h-56 w-full border sm:h-72" />;
+  return (
+    <div
+      ref={containerRef}
+      className="border-border h-56 w-full border sm:h-72 [&_.mapboxgl-canvas]:cursor-default"
+      aria-hidden
+    />
+  );
 }
