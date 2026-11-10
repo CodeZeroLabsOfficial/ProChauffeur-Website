@@ -25,7 +25,7 @@ Marketing hero may pre-fill estimate entry fields; it is not a separate booking 
 | Fare estimate / retail quote | Anonymous Auth (session) |
 | Confirm + pay / saved cards / corporate | Email OTP create-account or sign-in |
 
-Retail quotes use the existing `buildTripQuote` callable. Callers without a provisioned customer profile get retail-only pricing (no corporate). No additional quote Cloud Function.
+Retail quotes use the existing `buildTripQuote` callable. Authenticated callers without a `users/{uid}` profile (anonymous web sessions) get **card/retail-only** pricing — no corporate settlement. Redeploy Functions after that handler change. No additional quote Cloud Function.
 
 ## Data
 

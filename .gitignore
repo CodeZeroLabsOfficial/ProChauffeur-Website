@@ -1,14 +1,30 @@
 # dependencies
 node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+coverage/
 
 # next.js
 .next/
 out/
 
+# production
+build/
+
 # env (keep .env.example trackable)
 .env
 .env.local
 .env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # debug / build
 npm-debug.log*
@@ -16,6 +32,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# vercel
+.vercel
 
 # OS / editor
 .DS_Store
