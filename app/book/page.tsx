@@ -9,18 +9,23 @@ type BookPageProps = {
     pickup?: string;
     dropoff?: string;
     scheduledPickupAt?: string;
+    scheduledReturnAt?: string;
+    itinerary?: string;
+    tripType?: string;
+    hourlyHours?: string;
   }>;
 };
 
 export default async function BookPage({ searchParams }: BookPageProps) {
   const params = await searchParams;
+  const hourlyHours = params.hourlyHours ? Number(params.hourlyHours) : undefined;
 
   return (
     <div className="bg-background flex min-h-full flex-col">
       <header className="border-border border-b px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Link href="/" className="font-heading text-lg tracking-tight">
-            ProChauffeur
+            Elite Chauffeurs
           </Link>
           <Link href="/" className={cn(buttonVariants({ variant: "ghost" }))}>
             Back
@@ -32,7 +37,14 @@ export default async function BookPage({ searchParams }: BookPageProps) {
           seed={{
             pickupText: params.pickup,
             dropoffText: params.dropoff,
-            scheduledPickupAt: params.scheduledPickupAt
+            scheduledPickupAt: params.scheduledPickupAt,
+            scheduledReturnAt: params.scheduledReturnAt,
+            itinerary: params.itinerary === "return" ? "return" : "oneWay",
+            tripType: params.tripType === "hourly" ? "hourly" : "transfer",
+            hourlyHours:
+              typeof hourlyHours === "number" && Number.isFinite(hourlyHours)
+                ? hourlyHours
+                : undefined
           }}
         />
       </main>

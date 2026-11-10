@@ -18,6 +18,10 @@ type FareEstimateViewProps = {
     pickupText?: string;
     dropoffText?: string;
     scheduledPickupAt?: string;
+    scheduledReturnAt?: string;
+    itinerary?: "oneWay" | "return";
+    tripType?: "transfer" | "hourly";
+    hourlyHours?: number;
   };
 };
 

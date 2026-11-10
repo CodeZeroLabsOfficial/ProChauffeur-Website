@@ -1,6 +1,6 @@
 # Website architecture
 
-Customer-facing ProChauffeur site: marketing pages plus a booking funnel that matches the mobile booking product outcomes.
+Customer-facing Elite Chauffeurs site: marketing pages plus a booking funnel that matches the mobile booking product outcomes.
 
 ## Stack
 

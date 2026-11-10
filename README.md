@@ -1,6 +1,6 @@
-# ProChauffeur Website
+# Elite Chauffeurs Website
 
-Customer-facing marketing site and booking funnel for a ProChauffeur stamp.
+Customer-facing marketing site and booking funnel for the Elite Chauffeurs brand.
 
 ## Stack
 

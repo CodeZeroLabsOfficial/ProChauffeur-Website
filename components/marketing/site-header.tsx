@@ -1,84 +1,133 @@
 "use client";
 
+import { useState } from "react";
 import { Menu } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
   DrawerTitle,
   DrawerTrigger
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/#features", label: "Features" },
-  { href: "/fleet", label: "Fleet" },
-  { href: "/contact", label: "Contact" }
+  { label: "Home", href: "/" },
+  { label: "Fleet", href: "/fleet" },
+  { label: "Features", href: "/#features" },
+  { label: "Contact", href: "/contact" }
 ] as const;
 
-export function SiteHeader({ className }: { className?: string }) {
+function Logo({ className }: { className?: string }) {
   return (
-    <header className={cn("absolute inset-x-0 top-0 z-20", className)}>
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20 sm:px-6">
+    <Link
+      href="/"
+      className={cn("flex items-center gap-2.5 text-white", className)}>
+      <Image
+        src="/elite-chauffeurs-mark.png"
+        alt=""
+        width={32}
+        height={32}
+        className="size-8 rounded-md object-cover"
+        priority
+      />
+      <span className="font-heading text-lg tracking-tight">Elite Chauffeurs</span>
+    </Link>
+  );
+}
+
+export function SiteHeader({ className }: { className?: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <nav
+      className={cn(
+        "grid h-16 w-full grid-cols-[1fr_auto_1fr] items-center border-b border-white/10 bg-neutral-950 px-4 text-white lg:px-6",
+        className
+      )}>
+      <Logo />
+
+      <div className="col-start-2 hidden items-center gap-8 md:flex">
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.label}
+            href={link.href}
+            className="text-sm font-medium text-white/70 transition-colors hover:text-white">
+            {link.label}
+          </Link>
+        ))}
+      </div>
+
+      <div className="col-start-3 flex items-center justify-end gap-2 justify-self-end">
         <Link
-          href="/"
-          className="font-heading text-lg tracking-tight text-white sm:text-xl">
-          ProChauffeur
+          href="/book"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "hidden text-white hover:bg-white/10 hover:text-white md:inline-flex"
+          )}>
+          Sign in
+        </Link>
+        <Link
+          href="/book"
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "hidden bg-white text-neutral-950 hover:bg-white/90 md:inline-flex"
+          )}>
+          Register
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm text-white/80 transition-colors hover:text-white">
-              {link.label}
-            </Link>
-          ))}
-          <Link
-            href="/book"
-            className={cn(
-              buttonVariants({ size: "default" }),
-              "bg-white text-neutral-950 hover:bg-white/90"
-            )}>
-            Book
-          </Link>
-        </div>
-
-        <Drawer swipeDirection="right">
+        <Drawer
+          swipeDirection="right"
+          open={isOpen}
+          onOpenChange={(open) => setIsOpen(open)}>
           <DrawerTrigger
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon" }),
-              "text-white hover:bg-white/10 md:hidden"
-            )}
-            aria-label="Open menu">
+              "text-white hover:bg-white/10 hover:text-white md:hidden"
+            )}>
             <Menu />
+            <span className="sr-only">Toggle menu</span>
           </DrawerTrigger>
-          <DrawerContent className="p-6">
-            <DrawerHeader className="p-0">
-              <DrawerTitle className="font-heading text-left text-xl font-normal">
-                ProChauffeur
-              </DrawerTitle>
-            </DrawerHeader>
-            <div className="mt-8 flex flex-col gap-4">
+          <DrawerContent className="flex flex-col border-neutral-800 bg-neutral-950 p-6 text-white">
+            <DrawerTitle className="sr-only">Menu</DrawerTitle>
+            <Logo />
+            <div className="flex grow flex-col">
               {NAV_LINKS.map((link) => (
                 <Link
-                  key={link.href}
+                  key={link.label}
                   href={link.href}
-                  className="text-foreground py-2 text-base">
+                  className="py-2 font-medium text-white"
+                  onClick={() => setIsOpen(false)}>
                   {link.label}
                 </Link>
               ))}
-              <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "mt-4 w-full")}>
-                Book a trip
+            </div>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/book"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "w-full border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                )}
+                onClick={() => setIsOpen(false)}>
+                Sign in
+              </Link>
+              <Link
+                href="/book"
+                className={cn(
+                  buttonVariants(),
+                  "w-full bg-white text-neutral-950 hover:bg-white/90"
+                )}
+                onClick={() => setIsOpen(false)}>
+                Register
               </Link>
             </div>
           </DrawerContent>
         </Drawer>
-      </nav>
-    </header>
+      </div>
+    </nav>
   );
 }

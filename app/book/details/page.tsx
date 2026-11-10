@@ -9,7 +9,7 @@ export default function BookDetailsPage() {
       <header className="border-border border-b px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Link href="/book" className="font-heading text-lg tracking-tight">
-            ProChauffeur
+            Elite Chauffeurs
           </Link>
           <Link href="/book" className={cn(buttonVariants({ variant: "ghost" }))}>
             Back

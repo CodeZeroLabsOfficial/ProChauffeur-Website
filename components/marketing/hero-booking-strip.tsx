@@ -1,89 +1,268 @@
 "use client";
 
+import { Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
+import { HeroDateTimeField } from "@/components/marketing/hero-date-time-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { TripType } from "@/lib/models/enums";
+import { cn } from "@/lib/utils";
 
-function defaultPickupLocalValue() {
+type Itinerary = "oneWay" | "return";
+
+function defaultPickupDate() {
   const d = new Date();
   d.setMinutes(0, 0, 0);
   d.setHours(d.getHours() + 2);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return d;
 }
+
+function defaultReturnDate(pickup: Date) {
+  const d = new Date(pickup);
+  d.setHours(d.getHours() + 4);
+  return d;
+}
+
+const fieldClass =
+  "h-auto border-0 bg-transparent px-0 py-1 text-sm font-medium text-white shadow-none placeholder:text-white/45 focus-visible:ring-0 dark:bg-transparent";
+
+const pillClass =
+  "relative z-10 inline-flex h-9 items-center justify-center gap-1 rounded-full px-4 text-sm font-medium transition-colors duration-300";
 
 export function HeroBookingStrip() {
   const router = useRouter();
+  const [tripType, setTripType] = useState<TripType>("transfer");
+  const [itinerary, setItinerary] = useState<Itinerary>("oneWay");
+  const [itineraryOpen, setItineraryOpen] = useState(false);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
-  const [scheduledPickupAt, setScheduledPickupAt] = useState(defaultPickupLocalValue);
+  const [hourlyHours, setHourlyHours] = useState("3");
+  const [scheduledPickupAt, setScheduledPickupAt] = useState(defaultPickupDate);
+  const [scheduledReturnAt, setScheduledReturnAt] = useState(() =>
+    defaultReturnDate(defaultPickupDate())
+  );
+  const [thumb, setThumb] = useState({ left: 0, width: 0, ready: false });
+
+  const groupRef = useRef<HTMLDivElement>(null);
+  const transferRef = useRef<HTMLButtonElement>(null);
+  const hourlyRef = useRef<HTMLButtonElement>(null);
+
+  const isTransfer = tripType === "transfer";
+  const isReturn = isTransfer && itinerary === "return";
+  const transferLabel = itinerary === "return" ? "Return" : "One-way";
+
+  useLayoutEffect(() => {
+    const active = isTransfer ? transferRef.current : hourlyRef.current;
+    const group = groupRef.current;
+    if (!active || !group) return;
+
+    const measure = () => {
+      const groupRect = group.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      setThumb({
+        left: activeRect.left - groupRect.left,
+        width: activeRect.width,
+        ready: true
+      });
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(group);
+    observer.observe(active);
+    return () => observer.disconnect();
+  }, [isTransfer, transferLabel]);
+
+  function selectTransferItinerary(next: Itinerary) {
+    setTripType("transfer");
+    setItinerary(next);
+    if (next === "return") {
+      setScheduledReturnAt(defaultReturnDate(scheduledPickupAt));
+    }
+    setItineraryOpen(false);
+  }
+
+  function handlePickupChange(next: Date) {
+    setScheduledPickupAt(next);
+    if (scheduledReturnAt.getTime() < next.getTime()) {
+      setScheduledReturnAt(defaultReturnDate(next));
+    }
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const params = new URLSearchParams();
+    params.set("tripType", tripType);
+    if (isTransfer) params.set("itinerary", itinerary);
     if (pickup.trim()) params.set("pickup", pickup.trim());
-    if (dropoff.trim()) params.set("dropoff", dropoff.trim());
-    if (scheduledPickupAt) {
-      params.set("scheduledPickupAt", new Date(scheduledPickupAt).toISOString());
+    if (isTransfer && dropoff.trim()) params.set("dropoff", dropoff.trim());
+    if (!isTransfer) params.set("hourlyHours", hourlyHours);
+    params.set("scheduledPickupAt", scheduledPickupAt.toISOString());
+    if (isReturn) {
+      params.set("scheduledReturnAt", scheduledReturnAt.toISOString());
     }
-    const query = params.toString();
-    router.push(query ? `/book?${query}` : "/book");
+    router.push(`/book?${params.toString()}`);
   }
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="animate-hero-strip w-full max-w-4xl border border-white/20 bg-black/35 p-3 backdrop-blur-md sm:p-2">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-0">
-        <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
-          <Label htmlFor="hero-pickup" className="text-xs font-medium text-white/70">
-            Pickup
-          </Label>
-          <Input
-            id="hero-pickup"
-            name="pickup"
-            value={pickup}
-            onChange={(e) => setPickup(e.target.value)}
-            placeholder="Pickup address"
-            className="h-auto border-0 bg-transparent px-0 py-1 text-sm font-medium text-white shadow-none placeholder:text-white/45 focus-visible:ring-0 dark:bg-transparent"
-          />
-        </div>
-        <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
-          <Label htmlFor="hero-dropoff" className="text-xs font-medium text-white/70">
-            Drop-off
-          </Label>
-          <Input
-            id="hero-dropoff"
-            name="dropoff"
-            value={dropoff}
-            onChange={(e) => setDropoff(e.target.value)}
-            placeholder="Drop-off address"
-            className="h-auto border-0 bg-transparent px-0 py-1 text-sm font-medium text-white shadow-none placeholder:text-white/45 focus-visible:ring-0 dark:bg-transparent"
-          />
-        </div>
-        <div className="min-w-0 flex-1 px-3 py-2">
-          <Label htmlFor="hero-pickup-at" className="text-xs font-medium text-white/70">
-            Pickup time
-          </Label>
-          <Input
+      className="animate-hero-strip mx-auto flex w-full max-w-5xl flex-col items-center gap-4">
+      <div
+        ref={groupRef}
+        role="group"
+        aria-label="Trip type"
+        className="relative inline-flex rounded-full border border-white/20 bg-black/40 p-1 backdrop-blur-md">
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute top-1 left-0 bottom-1 rounded-full bg-white",
+            "transition-[transform,width,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            thumb.ready ? "opacity-100" : "opacity-0"
+          )}
+          style={{
+            width: thumb.width,
+            transform: `translateX(${thumb.left}px)`
+          }}
+        />
+
+        <Popover open={itineraryOpen} onOpenChange={setItineraryOpen}>
+          <PopoverTrigger
+            ref={transferRef}
+            type="button"
+            className={cn(
+              pillClass,
+              isTransfer ? "text-neutral-950" : "text-white/80 hover:text-white"
+            )}
+            aria-label={`${transferLabel}. Choose One-way or Return`}>
+            {transferLabel}
+            <ChevronDown
+              className={cn(
+                "size-3.5 transition-transform duration-300",
+                itineraryOpen && "rotate-180",
+                isTransfer ? "opacity-70" : "opacity-60"
+              )}
+            />
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-44 p-1">
+            <button
+              type="button"
+              className="hover:bg-accent flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm"
+              onClick={() => selectTransferItinerary("oneWay")}>
+              One-way
+              {itinerary === "oneWay" ? <Check className="size-4" /> : null}
+            </button>
+            <button
+              type="button"
+              className="hover:bg-accent flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm"
+              onClick={() => selectTransferItinerary("return")}>
+              Return
+              {itinerary === "return" ? <Check className="size-4" /> : null}
+            </button>
+          </PopoverContent>
+        </Popover>
+
+        <button
+          ref={hourlyRef}
+          type="button"
+          className={cn(
+            pillClass,
+            !isTransfer ? "text-neutral-950" : "text-white/80 hover:text-white"
+          )}
+          onClick={() => {
+            setTripType("hourly");
+            setItineraryOpen(false);
+          }}>
+          Hourly
+        </button>
+      </div>
+
+      <div className="w-full border border-white/20 bg-black/35 p-3 backdrop-blur-md sm:p-2">
+        <div
+          key={`${tripType}-${itinerary}`}
+          className="animate-hero-fields flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-0">
+          <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
+            <Label htmlFor="hero-pickup" className="text-xs font-medium text-white/70">
+              Pickup
+            </Label>
+            <Input
+              id="hero-pickup"
+              name="pickup"
+              value={pickup}
+              onChange={(e) => setPickup(e.target.value)}
+              placeholder="Pickup address"
+              className={fieldClass}
+            />
+          </div>
+
+          {isTransfer ? (
+            <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
+              <Label htmlFor="hero-dropoff" className="text-xs font-medium text-white/70">
+                Drop-off
+              </Label>
+              <Input
+                id="hero-dropoff"
+                name="dropoff"
+                value={dropoff}
+                onChange={(e) => setDropoff(e.target.value)}
+                placeholder="Drop-off address"
+                className={fieldClass}
+              />
+            </div>
+          ) : (
+            <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
+              <Label htmlFor="hero-hours" className="text-xs font-medium text-white/70">
+                Hours
+              </Label>
+              <Input
+                id="hero-hours"
+                name="hourlyHours"
+                type="number"
+                min={1}
+                max={24}
+                value={hourlyHours}
+                onChange={(e) => setHourlyHours(e.target.value)}
+                className={fieldClass}
+              />
+            </div>
+          )}
+
+          <HeroDateTimeField
             id="hero-pickup-at"
-            name="scheduledPickupAt"
-            type="datetime-local"
+            label="Pickup"
             value={scheduledPickupAt}
-            onChange={(e) => setScheduledPickupAt(e.target.value)}
-            className="h-auto border-0 bg-transparent px-0 py-1 text-sm font-medium text-white shadow-none focus-visible:ring-0 dark:bg-transparent [color-scheme:dark]"
+            onChange={handlePickupChange}
+            className={
+              isReturn
+                ? "border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
+                : "min-w-0 flex-1 px-3 py-2"
+            }
           />
-        </div>
-        <div className="px-1 pb-1 sm:pb-0 sm:pl-2">
-          <Button
-            type="submit"
-            size="lg"
-            className="h-11 w-full bg-white px-6 text-neutral-950 hover:bg-white/90 sm:w-auto">
-            Get estimate
-          </Button>
+
+          {isReturn ? (
+            <HeroDateTimeField
+              id="hero-return-at"
+              label="Return"
+              value={scheduledReturnAt}
+              onChange={setScheduledReturnAt}
+              minDate={scheduledPickupAt}
+              className="min-w-0 flex-1 px-3 py-2"
+            />
+          ) : null}
+
+          <div className="px-1 pb-1 sm:pb-0 sm:pl-2">
+            <Button
+              type="submit"
+              size="lg"
+              className="h-11 w-full bg-white px-6 text-neutral-950 hover:bg-white/90 sm:w-auto">
+              Get estimate
+            </Button>
+          </div>
         </div>
       </div>
     </form>
