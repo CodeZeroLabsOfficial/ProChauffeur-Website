@@ -60,7 +60,7 @@ export function VehicleClassList({
     const track = trackRef.current;
     if (!track) return;
     const firstCard = track.querySelector<HTMLElement>("[data-vehicle-card]");
-    const step = firstCard ? firstCard.offsetWidth + GAP_PX : track.clientWidth / 3;
+    const step = firstCard ? firstCard.offsetWidth + GAP_PX : track.clientWidth / 2;
     track.scrollBy({ left: direction * step, behavior: "smooth" });
   };
 
@@ -78,7 +78,7 @@ export function VehicleClassList({
             <li
               key={vehicleClass.id}
               data-vehicle-card
-              className="w-[min(85%,18rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]">
+              className="w-[min(90%,22rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)]">
               <button
                 type="button"
                 onClick={() => onSelect(vehicleClass.id)}
@@ -89,37 +89,39 @@ export function VehicleClassList({
                     ? "border-foreground ring-foreground/15 ring-2"
                     : "border-border hover:border-foreground/40"
                 )}>
-                <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden">
+                <div className="bg-muted relative aspect-[16/9] w-full overflow-hidden">
                   {vehicleClass.imageUrl ? (
                     <Image
                       src={vehicleClass.imageUrl}
                       alt=""
                       fill
                       className="object-cover object-center"
-                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 40vw, 85vw"
+                      sizes="(min-width: 640px) 45vw, 90vw"
                     />
                   ) : null}
                 </div>
-                <div className="space-y-2 px-4 py-3">
+                <div className="space-y-2.5 px-4 py-4 sm:px-5">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium leading-tight">{vehicleClass.displayName}</p>
+                    <p className="text-base font-medium leading-tight sm:text-lg">
+                      {vehicleClass.displayName}
+                    </p>
                     {quoteTotal != null ? (
-                      <p className="shrink-0 text-sm font-medium tabular-nums">
+                      <p className="shrink-0 text-base font-medium tabular-nums">
                         {formatMoney(quoteTotal, currencyCode)}
                       </p>
                     ) : null}
                   </div>
-                  <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                     <span className="inline-flex items-center gap-1.5">
-                      <Users className="size-3.5" aria-hidden />
+                      <Users className="size-4" aria-hidden />
                       {vehicleClass.capacity.passengerCount}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Briefcase className="size-3.5" aria-hidden />
+                      <Briefcase className="size-4" aria-hidden />
                       {vehicleClass.capacity.luggage.smallCount} small
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                      <Briefcase className="size-3.5" aria-hidden />
+                      <Briefcase className="size-4" aria-hidden />
                       {vehicleClass.capacity.luggage.largeCount} large
                     </span>
                   </div>

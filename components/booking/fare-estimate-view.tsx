@@ -12,6 +12,7 @@ import { VehicleClassList } from "@/components/booking/vehicle-class-list";
 import { buttonVariants } from "@/components/ui/button";
 import { useBookingStore } from "@/lib/booking/booking-store";
 import { formatMoney } from "@/lib/booking/quote-api";
+import { formatDistanceKm, formatDurationMinutes } from "@/lib/mapbox/directions";
 import { cn } from "@/lib/utils";
 
 type FareEstimateViewProps = {
@@ -176,7 +177,7 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
         <aside
           className={cn(
             "border-border bg-background space-y-4 border p-4",
-            "lg:mt-10 lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto"
+            "lg:mt-10 lg:sticky lg:top-[6.5rem]"
           )}>
           <RouteMap
             pickup={pickup?.coordinate ?? null}
@@ -190,18 +191,18 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
             ) : (
               <p className="text-muted-foreground text-sm">Select a vehicle class</p>
             )}
-            {quote ? (
-              <p className="shrink-0 text-sm font-medium tabular-nums">
-                {formatMoney(
-                  Math.max(0, quote.displayTotal - quote.taxAmount),
-                  quote.currencyCode
-                )}
+            {route ? (
+              <p className="text-muted-foreground shrink-0 text-sm">
+                {formatDistanceKm(route.distanceMeters)} ·{" "}
+                {formatDurationMinutes(route.durationSeconds)}
               </p>
             ) : null}
           </div>
 
           {quote ? (
-            <QuoteBreakdown quote={quote} />
+            <div className="pt-2">
+              <QuoteBreakdown quote={quote} />
+            </div>
           ) : (
             <p className="text-muted-foreground text-sm">
               Enter pickup and drop-off to see an estimate.

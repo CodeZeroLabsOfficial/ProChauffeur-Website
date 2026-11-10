@@ -8,9 +8,15 @@ type QuoteBreakdownProps = {
 };
 
 export function QuoteBreakdown({ quote }: QuoteBreakdownProps) {
+  const fareAmount = Math.max(0, quote.displayTotal - quote.taxAmount);
+
   return (
     <div className="space-y-4">
       <ul className="space-y-2 text-sm">
+        <li className="flex items-center justify-between gap-4">
+          <span className="text-muted-foreground">Fare</span>
+          <span className="tabular-nums">{formatMoney(fareAmount, quote.currencyCode)}</span>
+        </li>
         <li className="flex items-center justify-between gap-4">
           <span className="text-muted-foreground">GST</span>
           <span className="tabular-nums">{formatMoney(quote.taxAmount, quote.currencyCode)}</span>
