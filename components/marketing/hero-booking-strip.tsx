@@ -41,6 +41,12 @@ const fieldClass =
 const pillClass =
   "relative z-10 inline-flex h-9 items-center justify-center gap-1 rounded-full px-4 text-sm font-medium transition-colors duration-300";
 
+const addressFieldClass =
+  "border-white/15 min-w-0 flex-[1.7] border-b px-3 py-2 sm:border-r sm:border-b-0";
+
+const dateTimeFieldClass =
+  "border-white/15 min-w-0 border-b px-3 py-2 sm:w-[10.75rem] sm:flex-none sm:shrink-0 sm:border-b-0";
+
 export function HeroBookingStrip() {
   const router = useRouter();
   const [tripType, setTripType] = useState<TripType>("transfer");
@@ -256,7 +262,7 @@ export function HeroBookingStrip() {
             onQueryChange={setPickupText}
             country={mapbox.country}
             proximity={mapbox.proximity}
-            className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
+            className={addressFieldClass}
           />
 
           {isTransfer ? (
@@ -270,10 +276,10 @@ export function HeroBookingStrip() {
               onQueryChange={setDropoffText}
               country={mapbox.country}
               proximity={pickup?.coordinate ?? mapbox.proximity}
-              className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
+              className={addressFieldClass}
             />
           ) : (
-            <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
+            <div className={addressFieldClass}>
               <Label htmlFor="hero-hours" className="text-xs font-medium text-white/70">
                 Hours
               </Label>
@@ -295,11 +301,7 @@ export function HeroBookingStrip() {
             label="Pickup"
             value={scheduledPickupAt}
             onChange={handlePickupChange}
-            className={
-              isReturn
-                ? "border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
-                : "min-w-0 flex-1 px-3 py-2"
-            }
+            className={cn(dateTimeFieldClass, isReturn && "sm:border-r")}
           />
 
           {isReturn ? (
@@ -309,7 +311,7 @@ export function HeroBookingStrip() {
               value={scheduledReturnAt}
               onChange={setScheduledReturnAt}
               minDate={scheduledPickupAt}
-              className="min-w-0 flex-1 px-3 py-2"
+              className={dateTimeFieldClass}
             />
           ) : null}
 

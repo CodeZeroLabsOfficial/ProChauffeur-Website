@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { SelectedPlace } from "@/lib/booking/booking-store";
 import type { CoordinateField } from "@/lib/models/coordinate";
-import { searchAddresses, type GeocodeSuggestion } from "@/lib/mapbox/geocode";
+import {
+  createMapboxSearchSessionToken,
+  resolveAddressHit,
+  searchAddresses,
+  type AddressSearchHit
+} from "@/lib/mapbox/address-search";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -39,9 +44,11 @@ export function AddressSearchField({
   className
 }: AddressSearchFieldProps) {
   const [query, setQuery] = useState(value?.addressLine ?? "");
-  const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<AddressSearchHit[]>([]);
   const [open, setOpen] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const sessionTokenRef = useRef(createMapboxSearchSessionToken());
   const isHero = variant === "hero";
 
   useEffect(() => {
@@ -60,7 +67,10 @@ export function AddressSearchField({
     const handle = window.setTimeout(() => {
       void (async () => {
         try {
-          const rows = await searchAddresses(query, { country, proximity });
+          const rows = await searchAddresses(query, sessionTokenRef.current, {
+            country,
+            proximity
+          });
           setSuggestions(rows);
           setSearchError(null);
           setOpen(true);
@@ -78,6 +88,28 @@ export function AddressSearchField({
     proximity?.latitude,
     proximity?.longitude
   ]);
+
+  async function handleSelect(hit: AddressSearchHit) {
+    setResolvingId(hit.id);
+    setSearchError(null);
+    try {
+      const resolved = await resolveAddressHit(hit, sessionTokenRef.current);
+      onSelect({
+        addressLine: resolved.addressLine,
+        coordinate: resolved.coordinate,
+        postcode: resolved.postcode
+      });
+      setQuery(resolved.addressLine);
+      onQueryChange?.(resolved.addressLine);
+      setOpen(false);
+      setSuggestions([]);
+      sessionTokenRef.current = createMapboxSearchSessionToken();
+    } catch (error) {
+      setSearchError(error instanceof Error ? error.message : "Could not resolve this place.");
+    } finally {
+      setResolvingId(null);
+    }
+  }
 
   return (
     <div className={cn("relative", isHero ? "min-w-0" : "space-y-2", className)}>
@@ -131,23 +163,33 @@ export function AddressSearchField({
             <li key={suggestion.id}>
               <button
                 type="button"
+                disabled={resolvingId !== null}
                 className={cn(
                   "w-full px-3 py-2 text-left text-sm transition-colors",
-                  isHero ? "hover:bg-white/10" : "hover:bg-muted"
+                  isHero ? "hover:bg-white/10" : "hover:bg-muted",
+                  resolvingId === suggestion.id && "opacity-60"
                 )}
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  onSelect({
-                    addressLine: suggestion.addressLine,
-                    coordinate: suggestion.coordinate,
-                    postcode: suggestion.postcode
-                  });
-                  setQuery(suggestion.addressLine);
-                  onQueryChange?.(suggestion.addressLine);
-                  setOpen(false);
-                  setSuggestions([]);
-                }}>
-                {suggestion.placeName}
+                onClick={() => void handleSelect(suggestion)}>
+                <span className="block">{suggestion.title}</span>
+                {suggestion.addressLine !== suggestion.title ? (
+                  <span
+                    className={cn(
+                      "mt-0.5 block text-xs",
+                      isHero ? "text-white/55" : "text-muted-foreground"
+                    )}>
+                    {suggestion.addressLine}
+                  </span>
+                ) : null}
+                {suggestion.isAirport || suggestion.isHotel ? (
+                  <span
+                    className={cn(
+                      "mt-0.5 block text-[0.65rem] font-medium tracking-wide uppercase",
+                      isHero ? "text-white/45" : "text-muted-foreground"
+                    )}>
+                    {suggestion.isAirport ? "Airport" : "Hotel"}
+                  </span>
+                ) : null}
               </button>
             </li>
           ))}

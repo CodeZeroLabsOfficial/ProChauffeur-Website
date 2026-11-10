@@ -30,7 +30,8 @@ function postcodeFromFeature(feature: MapboxFeature): string {
   return m ? m[0] : "";
 }
 
-export async function searchAddresses(
+/** Mapbox Geocoding v5 autocomplete (addresses, places, and basic POIs). */
+export async function fetchGeocodeSuggestions(
   query: string,
   options?: AddressSearchOptions
 ): Promise<GeocodeSuggestion[]> {

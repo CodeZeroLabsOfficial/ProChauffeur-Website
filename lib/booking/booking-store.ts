@@ -23,7 +23,6 @@ import type { PricingAddon } from "@/lib/models/pricing";
 import type { QuoteResult } from "@/lib/models/quote";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
 import { fetchDrivingRoute, type RouteEstimate } from "@/lib/mapbox/directions";
-import type { GeocodeSuggestion } from "@/lib/mapbox/geocode";
 
 export type SelectedPlace = {
   addressLine: string;
@@ -106,18 +105,24 @@ async function resolvePlaceFromText(
 ): Promise<SelectedPlace | null> {
   const trimmed = text.trim();
   if (!trimmed) return null;
-  const { searchAddresses } = await import("@/lib/mapbox/geocode");
-  const results = await searchAddresses(trimmed, {
+  const {
+    createMapboxSearchSessionToken,
+    resolveAddressHit,
+    searchAddresses
+  } = await import("@/lib/mapbox/address-search");
+  const sessionToken = createMapboxSearchSessionToken();
+  const results = await searchAddresses(trimmed, sessionToken, {
     limit: 1,
     country: options?.country,
     proximity: options?.proximity
   });
-  const first = results[0] as GeocodeSuggestion | undefined;
+  const first = results[0];
   if (!first) return null;
+  const resolved = await resolveAddressHit(first, sessionToken);
   return {
-    addressLine: first.addressLine,
-    coordinate: first.coordinate,
-    postcode: first.postcode || extractPostcodeFromAddress(first.addressLine)
+    addressLine: resolved.addressLine,
+    coordinate: resolved.coordinate,
+    postcode: resolved.postcode || extractPostcodeFromAddress(resolved.addressLine)
   };
 }
 
