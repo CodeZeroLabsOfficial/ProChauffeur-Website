@@ -15,12 +15,12 @@ export function MarketingHero() {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/55 to-neutral-950/25" />
 
-      <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col items-center justify-center px-4 py-16 sm:px-6 sm:py-20">
-        <div className="animate-hero-copy mb-10 max-w-2xl space-y-4 text-center">
+      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col items-center justify-center px-4 py-16 sm:px-6 sm:py-20">
+        <div className="animate-hero-copy mb-10 w-full space-y-4 text-center">
           <p className="font-heading text-4xl tracking-tight text-balance sm:text-5xl md:text-6xl">
-            Elite Chauffeurs
+            Where would you like to go?
           </p>
-          <h1 className="mx-auto max-w-xl text-lg text-white/85 text-balance sm:text-xl">
+          <h1 className="mx-auto max-w-2xl text-lg text-white/85 text-balance sm:text-xl">
             Professional chauffeur travel, quoted in minutes.
           </h1>
         </div>

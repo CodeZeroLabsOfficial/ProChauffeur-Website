@@ -112,7 +112,7 @@ export function HeroBookingStrip() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="animate-hero-strip mx-auto flex w-full max-w-5xl flex-col items-center gap-4">
+      className="animate-hero-strip flex w-full flex-col items-center gap-4">
       <div
         ref={groupRef}
         role="group"

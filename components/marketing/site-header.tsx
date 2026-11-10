@@ -27,7 +27,7 @@ function Logo({ className }: { className?: string }) {
       href="/"
       className={cn("flex items-center gap-2.5 text-white", className)}>
       <Image
-        src="/elite-chauffeurs-mark.png"
+        src="/logo.png"
         alt=""
         width={32}
         height={32}
