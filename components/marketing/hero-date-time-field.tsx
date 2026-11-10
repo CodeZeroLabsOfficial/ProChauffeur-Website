@@ -161,7 +161,10 @@ export function HeroDateTimeField({
                             ? "bg-white text-neutral-950"
                             : "text-white/80 hover:bg-white/10 hover:text-white"
                       )}
-                      onClick={() => onChange(mergeTime(value, option))}>
+                      onClick={() => {
+                        onChange(mergeTime(value, option));
+                        setOpen(false);
+                      }}>
                       {option}
                     </button>
                   );
