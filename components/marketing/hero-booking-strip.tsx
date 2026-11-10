@@ -4,11 +4,13 @@ import { Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 
+import { AddressSearchField } from "@/components/booking/address-search-field";
 import { HeroDateTimeField } from "@/components/marketing/hero-date-time-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { SelectedPlace } from "@/lib/booking/booking-store";
 import type { TripType } from "@/lib/models/enums";
 import { cn } from "@/lib/utils";
 
@@ -38,8 +40,10 @@ export function HeroBookingStrip() {
   const [tripType, setTripType] = useState<TripType>("transfer");
   const [itinerary, setItinerary] = useState<Itinerary>("oneWay");
   const [itineraryOpen, setItineraryOpen] = useState(false);
-  const [pickup, setPickup] = useState("");
-  const [dropoff, setDropoff] = useState("");
+  const [pickup, setPickup] = useState<SelectedPlace | null>(null);
+  const [dropoff, setDropoff] = useState<SelectedPlace | null>(null);
+  const [pickupText, setPickupText] = useState("");
+  const [dropoffText, setDropoffText] = useState("");
   const [hourlyHours, setHourlyHours] = useState("3");
   const [scheduledPickupAt, setScheduledPickupAt] = useState(defaultPickupDate);
   const [scheduledReturnAt, setScheduledReturnAt] = useState(() =>
@@ -99,8 +103,10 @@ export function HeroBookingStrip() {
     const params = new URLSearchParams();
     params.set("tripType", tripType);
     if (isTransfer) params.set("itinerary", itinerary);
-    if (pickup.trim()) params.set("pickup", pickup.trim());
-    if (isTransfer && dropoff.trim()) params.set("dropoff", dropoff.trim());
+    const pickupValue = (pickup?.addressLine || pickupText).trim();
+    const dropoffValue = (dropoff?.addressLine || dropoffText).trim();
+    if (pickupValue) params.set("pickup", pickupValue);
+    if (isTransfer && dropoffValue) params.set("dropoff", dropoffValue);
     if (!isTransfer) params.set("hourlyHours", hourlyHours);
     params.set("scheduledPickupAt", scheduledPickupAt.toISOString());
     if (isReturn) {
@@ -186,34 +192,28 @@ export function HeroBookingStrip() {
         <div
           key={`${tripType}-${itinerary}`}
           className="animate-hero-fields flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-0">
-          <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
-            <Label htmlFor="hero-pickup" className="text-xs font-medium text-white/70">
-              Pickup
-            </Label>
-            <Input
-              id="hero-pickup"
-              name="pickup"
-              value={pickup}
-              onChange={(e) => setPickup(e.target.value)}
-              placeholder="Pickup address"
-              className={fieldClass}
-            />
-          </div>
+          <AddressSearchField
+            id="hero-pickup"
+            label="Pickup"
+            placeholder="Pickup address"
+            variant="hero"
+            value={pickup}
+            onSelect={setPickup}
+            onQueryChange={setPickupText}
+            className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
+          />
 
           {isTransfer ? (
-            <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
-              <Label htmlFor="hero-dropoff" className="text-xs font-medium text-white/70">
-                Drop-off
-              </Label>
-              <Input
-                id="hero-dropoff"
-                name="dropoff"
-                value={dropoff}
-                onChange={(e) => setDropoff(e.target.value)}
-                placeholder="Drop-off address"
-                className={fieldClass}
-              />
-            </div>
+            <AddressSearchField
+              id="hero-dropoff"
+              label="Drop-off"
+              placeholder="Drop-off address"
+              variant="hero"
+              value={dropoff}
+              onSelect={setDropoff}
+              onQueryChange={setDropoffText}
+              className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
+            />
           ) : (
             <div className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0">
               <Label htmlFor="hero-hours" className="text-xs font-medium text-white/70">
@@ -255,7 +255,7 @@ export function HeroBookingStrip() {
             />
           ) : null}
 
-          <div className="px-1 pb-1 sm:pb-0 sm:pl-2">
+          <div className="flex items-center px-1 sm:self-center sm:pl-2">
             <Button
               type="submit"
               size="lg"

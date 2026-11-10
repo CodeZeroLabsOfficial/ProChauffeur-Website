@@ -21,6 +21,8 @@ type HeroDateTimeFieldProps = {
   onChange: (next: Date) => void;
   minDate?: Date;
   className?: string;
+  /** `hero` = light-on-dark strip; `plain` = booking wizard surfaces. */
+  variant?: "hero" | "plain";
 };
 
 function startOfDay(date: Date) {
@@ -59,13 +61,15 @@ export function HeroDateTimeField({
   value,
   onChange,
   minDate,
-  className
+  className,
+  variant = "hero"
 }: HeroDateTimeFieldProps) {
   const [open, setOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const today = startOfDay(new Date());
   const earliest = minDate ? startOfDay(minDate) : today;
   const time = snapTimeValue(value);
+  const isPlain = variant === "plain";
 
   useEffect(() => {
     if (!open) return;
@@ -81,21 +85,33 @@ export function HeroDateTimeField({
 
   return (
     <div className={cn("min-w-0", className)}>
-      <Label htmlFor={id} className="text-xs font-medium text-white/70">
+      <Label
+        htmlFor={id}
+        className={cn("text-xs font-medium", isPlain ? "text-muted-foreground" : "text-white/70")}>
         {label}
       </Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           id={id}
           type="button"
-          className="h-auto w-full border-0 bg-transparent px-0 py-1 text-left text-sm font-medium text-white shadow-none outline-none hover:bg-transparent focus-visible:ring-0">
+          className={cn(
+            "h-auto w-full px-0 py-1 text-left text-sm font-medium shadow-none outline-none",
+            isPlain
+              ? "border-border bg-background hover:bg-muted border px-3 py-2"
+              : "border-0 bg-transparent text-white hover:bg-transparent focus-visible:ring-0"
+          )}>
           {format(value, "EEE d MMM HH:mm")}
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="dark w-auto border-white/10 bg-neutral-950/80 p-0 text-white shadow-2xl ring-white/10 backdrop-blur-xl">
+          className={cn(
+            "w-auto p-0 shadow-2xl",
+            isPlain
+              ? "border-border bg-background text-foreground"
+              : "dark border-white/10 bg-neutral-950/80 text-white ring-white/10 backdrop-blur-xl"
+          )}>
           <div className="flex flex-col sm:flex-row">
-            <div className="sm:border-white/10 sm:border-r">
+            <div className={cn(isPlain ? "sm:border-border sm:border-r" : "sm:border-white/10 sm:border-r")}>
               <Calendar
                 mode="single"
                 captionLayout="dropdown"
@@ -113,8 +129,14 @@ export function HeroDateTimeField({
               />
             </div>
 
-            <div className="border-white/10 flex w-full flex-col border-t sm:w-36 sm:border-t-0">
-              <p className="px-3 pt-3 text-xs text-white/60">Time</p>
+            <div
+              className={cn(
+                "flex w-full flex-col sm:w-36",
+                isPlain ? "border-border border-t sm:border-t-0" : "border-white/10 border-t sm:border-t-0"
+              )}>
+              <p className={cn("px-3 pt-3 text-xs", isPlain ? "text-muted-foreground" : "text-white/60")}>
+                Time
+              </p>
               <div
                 ref={listRef}
                 className="max-h-64 overflow-y-auto p-1 sm:max-h-[17.5rem]"
@@ -131,9 +153,13 @@ export function HeroDateTimeField({
                       data-active={isActive ? "true" : undefined}
                       className={cn(
                         "flex w-full items-center rounded-md px-3 py-2 text-left text-sm transition-colors",
-                        isActive
-                          ? "bg-white text-neutral-950"
-                          : "text-white/80 hover:bg-white/10 hover:text-white"
+                        isPlain
+                          ? isActive
+                            ? "bg-foreground text-background"
+                            : "hover:bg-muted"
+                          : isActive
+                            ? "bg-white text-neutral-950"
+                            : "text-white/80 hover:bg-white/10 hover:text-white"
                       )}
                       onClick={() => onChange(mergeTime(value, option))}>
                       {option}

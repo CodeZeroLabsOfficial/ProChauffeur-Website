@@ -63,3 +63,9 @@ export const appConfig = {
     return getFirebaseClientEnv().NEXT_PUBLIC_FUNCTIONS_REGION;
   }
 };
+
+/** Stripe publishable key for Payment Element (optional until checkout). */
+export function getStripePublishableKey(): string | null {
+  const value = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
+  return value || null;
+}

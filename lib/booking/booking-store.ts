@@ -73,11 +73,15 @@ type BookingStore = {
   setItinerary: (itinerary: "oneWay" | "return") => void;
   setHourlyHours: (hours: number) => void;
   setPassengers: (count: number) => void;
+  setSmallLuggage: (count: number) => void;
+  setLargeLuggage: (count: number) => void;
   selectVehicleClass: (id: string) => void;
   toggleAddon: (id: string) => void;
   refreshRouteAndQuote: () => Promise<void>;
   bookableVehicleClasses: () => VehicleClass[];
   selectedVehicleClass: () => VehicleClass | null;
+  canProceedFromEstimate: () => boolean;
+  canProceedFromDetails: () => boolean;
 };
 
 function defaultPickupDate(): Date {
@@ -247,6 +251,47 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     void get().refreshRouteAndQuote();
   },
 
+  setSmallLuggage(count) {
+    set({ smallLuggage: Math.max(0, count), quote: null });
+    const bookable = get().bookableVehicleClasses();
+    const selected = get().selectedVehicleClassId;
+    if (selected && !bookable.some((row) => row.id === selected)) {
+      set({ selectedVehicleClassId: bookable[0]?.id ?? null, selectedAddonIds: [] });
+    }
+    void get().refreshRouteAndQuote();
+  },
+
+  setLargeLuggage(count) {
+    set({ largeLuggage: Math.max(0, count), quote: null });
+    const bookable = get().bookableVehicleClasses();
+    const selected = get().selectedVehicleClassId;
+    if (selected && !bookable.some((row) => row.id === selected)) {
+      set({ selectedVehicleClassId: bookable[0]?.id ?? null, selectedAddonIds: [] });
+    }
+    void get().refreshRouteAndQuote();
+  },
+
+  canProceedFromEstimate() {
+    const state = get();
+    return Boolean(state.quote && state.selectedVehicleClassId && state.pickup && state.dropoff);
+  },
+
+  canProceedFromDetails() {
+    const state = get();
+    if (!state.canProceedFromEstimate()) return false;
+    if (!(state.scheduledPickupAt instanceof Date) || Number.isNaN(state.scheduledPickupAt.getTime())) {
+      return false;
+    }
+    if (state.tripType === "hourly" && state.hourlyHours < 1) return false;
+    if (state.itinerary === "return") {
+      if (!(state.scheduledReturnAt instanceof Date) || Number.isNaN(state.scheduledReturnAt.getTime())) {
+        return false;
+      }
+      if (state.scheduledReturnAt.getTime() <= state.scheduledPickupAt.getTime()) return false;
+    }
+    return state.passengers >= 1;
+  },
+
   selectVehicleClass(id) {
     set({ selectedVehicleClassId: id, selectedAddonIds: [], quote: null });
     void get().refreshRouteAndQuote();
@@ -369,6 +414,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         pickupAddressLine: pickup.addressLine,
         dropoffAddressLine: dropoff.addressLine,
         scheduledPickupAt: get().scheduledPickupAt,
+        bookedHours: tripType === "hourly" ? get().hourlyHours : null,
         addonIds: selectedAddonIds
       });
       set({ quote, isQuoting: false, quoteError: null, pricingNotice: null });
