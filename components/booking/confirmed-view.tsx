@@ -13,7 +13,7 @@ export function ConfirmedView() {
 
   return (
     <div className="bg-background flex min-h-full flex-col">
-      <SiteHeader />
+      <SiteHeader showSignIn={false} />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-6 px-4 py-16 sm:px-6">
         <p className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
           Confirmed

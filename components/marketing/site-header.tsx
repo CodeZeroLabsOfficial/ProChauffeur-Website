@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -50,7 +50,7 @@ function Logo({ className }: { className?: string }) {
   return (
     <Link
       href="/"
-      className={cn("flex items-center gap-2.5 text-white", className)}>
+      className={cn("flex shrink-0 items-center gap-2.5 text-white", className)}>
       <Image
         src="/logo.png"
         alt=""
@@ -64,67 +64,92 @@ function Logo({ className }: { className?: string }) {
   );
 }
 
-export function SiteHeader({ className }: { className?: string }) {
+type SiteHeaderProps = {
+  className?: string;
+  /** Replaces marketing nav links (e.g. booking trip fields). */
+  center?: ReactNode;
+  showSignIn?: boolean;
+};
+
+export function SiteHeader({ className, center, showSignIn = true }: SiteHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const hasCenter = center != null;
 
   return (
     <nav
       className={cn(
-        "grid h-16 w-full grid-cols-[1fr_auto_1fr] items-center border-b border-white/10 bg-neutral-950 px-4 text-white lg:px-6",
+        "flex h-16 w-full items-center gap-3 border-b border-white/10 bg-neutral-950 px-4 text-white lg:px-6",
         className
       )}>
       <Logo />
 
-      <div className="col-start-2 hidden items-center gap-8 md:flex">
-        {NAV_LINKS.map((link) => (
-          <Link key={link.label} href={link.href} className={navLinkClassName}>
-            {link.label}
-          </Link>
-        ))}
-      </div>
+      {hasCenter ? (
+        <div className="flex min-w-0 flex-1 items-center justify-center">{center}</div>
+      ) : (
+        <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
+          {NAV_LINKS.map((link) => (
+            <Link key={link.label} href={link.href} className={navLinkClassName}>
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
 
-      <div className="col-start-3 flex items-center justify-end gap-2 justify-self-end">
-        <Link href="/booking" className={cn(navLinkClassName, "hidden md:inline-flex")}>
-          Sign in
-          <SignInIcon />
-        </Link>
-
-        <Drawer
-          swipeDirection="right"
-          open={isOpen}
-          onOpenChange={(open) => setIsOpen(open)}>
-          <DrawerTrigger
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "icon" }),
-              "text-white hover:bg-white/10 hover:text-white md:hidden"
-            )}>
-            <Menu />
-            <span className="sr-only">Toggle menu</span>
-          </DrawerTrigger>
-          <DrawerContent className="flex flex-col border-neutral-800 bg-neutral-950 p-6 text-white">
-            <DrawerTitle className="sr-only">Menu</DrawerTitle>
-            <Logo />
-            <div className="flex grow flex-col">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="py-2 font-medium text-white"
-                  onClick={() => setIsOpen(false)}>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-            <Link
-              href="/booking"
-              className={cn(navLinkClassName, "py-2")}
-              onClick={() => setIsOpen(false)}>
+      {(showSignIn || !hasCenter) && (
+        <div className="flex shrink-0 items-center justify-end gap-2">
+          {showSignIn ? (
+            <Link href="/booking" className={cn(navLinkClassName, "hidden md:inline-flex")}>
               Sign in
               <SignInIcon />
             </Link>
-          </DrawerContent>
-        </Drawer>
-      </div>
+          ) : null}
+
+          {!hasCenter ? (
+            <Drawer
+              swipeDirection="right"
+              open={isOpen}
+              onOpenChange={(open) => setIsOpen(open)}>
+              <DrawerTrigger
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "text-white hover:bg-white/10 hover:text-white md:hidden"
+                )}>
+                <Menu />
+                <span className="sr-only">Toggle menu</span>
+              </DrawerTrigger>
+              <DrawerContent className="flex flex-col border-neutral-800 bg-neutral-950 p-6 text-white">
+                <DrawerTitle className="sr-only">Menu</DrawerTitle>
+                <Logo />
+                <div className="flex grow flex-col">
+                  {NAV_LINKS.map((link) => (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className="py-2 font-medium text-white"
+                      onClick={() => setIsOpen(false)}>
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+                {showSignIn ? (
+                  <Link
+                    href="/booking"
+                    className={cn(navLinkClassName, "py-2")}
+                    onClick={() => setIsOpen(false)}>
+                    Sign in
+                    <SignInIcon />
+                  </Link>
+                ) : null}
+              </DrawerContent>
+            </Drawer>
+          ) : showSignIn ? (
+            <Link href="/booking" className={cn(navLinkClassName, "md:hidden")}>
+              Sign in
+              <SignInIcon />
+            </Link>
+          ) : null}
+        </div>
+      )}
     </nav>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { EstimateTripStrip } from "@/components/booking/estimate-trip-strip";
+import { EstimateTripFields } from "@/components/booking/estimate-trip-fields";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { cn } from "@/lib/utils";
 
@@ -30,8 +30,10 @@ export function BookingChrome({
 
   return (
     <div className="bg-background flex min-h-full flex-col">
-      <SiteHeader />
-      {showTripStrip ? <EstimateTripStrip /> : null}
+      <SiteHeader
+        showSignIn={false}
+        center={showTripStrip ? <EstimateTripFields /> : undefined}
+      />
 
       <div className="border-border border-b px-4 py-3 sm:px-6">
         <nav
