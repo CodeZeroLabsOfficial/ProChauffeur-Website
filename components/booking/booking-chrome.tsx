@@ -1,43 +1,40 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button";
+import { EstimateTripStrip } from "@/components/booking/estimate-trip-strip";
+import { SiteHeader } from "@/components/marketing/site-header";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
-  { id: "estimate", label: "Estimate", href: "/book" },
-  { id: "details", label: "Details", href: "/book/details" },
-  { id: "payment", label: "Payment", href: "/book/payment" },
-  { id: "summary", label: "Summary", href: "/book/summary" }
+  { id: "estimate", label: "Estimate" },
+  { id: "details", label: "Details" },
+  { id: "payment", label: "Payment" },
+  { id: "summary", label: "Summary" }
 ] as const;
 
 export type BookingStepId = (typeof STEPS)[number]["id"];
 
 type BookingChromeProps = {
   step: BookingStepId;
-  backHref: string;
   children: React.ReactNode;
+  showTripStrip?: boolean;
+  contentClassName?: string;
 };
 
-export function BookingChrome({ step, backHref, children }: BookingChromeProps) {
+export function BookingChrome({
+  step,
+  children,
+  showTripStrip = false,
+  contentClassName
+}: BookingChromeProps) {
   const activeIndex = STEPS.findIndex((row) => row.id === step);
 
   return (
     <div className="bg-background flex min-h-full flex-col">
-      <header className="border-border border-b px-4 py-5 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-          <Link href="/" className="font-heading text-lg tracking-tight">
-            Elite Chauffeurs
-          </Link>
-          <Link href={backHref} className={cn(buttonVariants({ variant: "ghost" }))}>
-            Back
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
+      {showTripStrip ? <EstimateTripStrip /> : null}
 
       <div className="border-border border-b px-4 py-3 sm:px-6">
         <nav
           aria-label="Booking steps"
-          className="text-muted-foreground mx-auto flex max-w-3xl gap-2 overflow-x-auto text-xs font-medium tracking-wide uppercase">
+          className="text-muted-foreground mx-auto flex max-w-6xl gap-2 overflow-x-auto text-xs font-medium tracking-wide uppercase">
           {STEPS.map((row, index) => {
             const isActive = row.id === step;
             const isPast = index < activeIndex;
@@ -61,7 +58,14 @@ export function BookingChrome({ step, backHref, children }: BookingChromeProps) 
         </nav>
       </div>
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">{children}</main>
+      <main
+        className={cn(
+          "mx-auto w-full flex-1 px-4 py-8 sm:px-6",
+          showTripStrip ? "max-w-6xl" : "max-w-3xl",
+          contentClassName
+        )}>
+        {children}
+      </main>
     </div>
   );
 }

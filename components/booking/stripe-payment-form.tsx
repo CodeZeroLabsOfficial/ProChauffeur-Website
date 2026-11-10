@@ -47,7 +47,7 @@ function ConfirmPaymentInner({
         elements,
         redirect: "if_required",
         confirmParams: {
-          return_url: `${window.location.origin}/book/confirmed`
+          return_url: `${window.location.origin}/booking/confirmed`
         }
       });
       if (result.error) {

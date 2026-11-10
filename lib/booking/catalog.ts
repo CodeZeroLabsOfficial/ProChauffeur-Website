@@ -1,80 +1,104 @@
 "use client";
 
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 
-import { mapBranch, mapPricingConfig, mapVehicleClass } from "@/lib/booking/mappers";
-import { firestore } from "@/lib/firebase/client";
-import { unionMapboxCountryCodes } from "@/lib/mapbox/operating-country-codes";
+import { firebaseAuth, firebaseFunctions } from "@/lib/firebase/client";
 import type { Branch } from "@/lib/models/branch";
 import type { CoordinateField } from "@/lib/models/coordinate";
-import type { PricingConfig } from "@/lib/models/pricing";
+import type { TripType } from "@/lib/models/enums";
+import type { PricingAddon } from "@/lib/models/pricing";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
 
 export type OperatingMapboxContext = {
-  /** Comma-joined ISO country codes from Location locales, or null if none configured. */
   country: string | null;
-  /** Average service-area center across active Locations, when available. */
   proximity: CoordinateField | null;
 };
 
-export async function fetchBranches(): Promise<Branch[]> {
-  const snap = await getDocs(collection(firestore(), "branches"));
-  return snap.docs.map((row) => mapBranch(row.id, row.data()));
+export type BookingCatalogResult = {
+  branches: Branch[];
+  mapbox: OperatingMapboxContext;
+  vehicleClasses: VehicleClass[];
+  addons: PricingAddon[];
+};
+
+export type GetBookingCatalogInput = {
+  branchId?: string | null;
+  tripType?: TripType;
+  passengers?: number;
+  smallLuggage?: number;
+  largeLuggage?: number;
+};
+
+type RemoteCatalog = {
+  branches?: Branch[];
+  mapbox?: {
+    country?: string | null;
+    proximity?: CoordinateField | null;
+  };
+  vehicleClasses?: VehicleClass[];
+  addons?: Array<{
+    id: string;
+    title: string;
+    price: number;
+    tripTypes?: TripType[];
+    vehicleClassIds?: string[];
+  }>;
+};
+
+function callableErrorMessage(error: unknown, fallback: string): string {
+  const message =
+    typeof error === "object" &&
+    error &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+      ? (error as { message: string }).message
+      : fallback;
+  return message.replace(/^Firebase:\s*/i, "").replace(/\s*\([^)]*\)\s*$/, "");
 }
 
-export async function fetchVehicleClasses(branchId: string): Promise<VehicleClass[]> {
-  const snap = await getDocs(collection(firestore(), "branches", branchId, "vehicle_classes"));
-  return snap.docs.map((row) => mapVehicleClass(row.id, row.data()));
-}
-
-export async function fetchPricingConfig(branchId: string): Promise<PricingConfig | null> {
-  const snap = await getDoc(doc(firestore(), "branches", branchId, "settings", "pricing"));
-  if (!snap.exists()) return null;
-  return mapPricingConfig(snap.data());
-}
-
-function proximityFromBranches(branches: Branch[]): CoordinateField | null {
-  const centers: CoordinateField[] = [];
-  for (const branch of branches) {
-    if (!branch.isActive) continue;
-    const area = branch.serviceArea;
-    if (!area || area.type !== "radius") continue;
-    if (typeof area.centerLatitude !== "number" || typeof area.centerLongitude !== "number") {
-      continue;
-    }
-    if (!Number.isFinite(area.centerLatitude) || !Number.isFinite(area.centerLongitude)) {
-      continue;
-    }
-    centers.push({
-      latitude: area.centerLatitude,
-      longitude: area.centerLongitude
-    });
+export async function getBookingCatalog(
+  input: GetBookingCatalogInput = {}
+): Promise<BookingCatalogResult> {
+  const user = firebaseAuth().currentUser;
+  if (!user) {
+    throw new Error("Sign in required to load booking catalog.");
   }
-  if (centers.length === 0) return null;
-  const latitude = centers.reduce((sum, row) => sum + row.latitude, 0) / centers.length;
-  const longitude = centers.reduce((sum, row) => sum + row.longitude, 0) / centers.length;
-  return { latitude, longitude };
-}
 
-/** Locale country codes + service-area proximity from configured Locations. */
-export async function fetchOperatingMapboxContext(
-  branches: Branch[]
-): Promise<OperatingMapboxContext> {
-  const active = branches.filter((branch) => branch.isActive);
-  const locales = await Promise.all(
-    active.map(async (branch) => {
-      const snap = await getDoc(doc(firestore(), "branches", branch.id, "settings", "locale"));
-      if (!snap.exists()) return null;
-      const mapboxCountryCodes = snap.get("mapboxCountryCodes");
-      return typeof mapboxCountryCodes === "string"
-        ? { mapboxCountryCodes }
-        : null;
-    })
+  const callable = httpsCallable<GetBookingCatalogInput, RemoteCatalog>(
+    firebaseFunctions(),
+    "getBookingCatalog"
   );
 
-  const country = unionMapboxCountryCodes(locales).trim() || null;
+  let result;
+  try {
+    result = await callable({
+      branchId: input.branchId ?? null,
+      tripType: input.tripType,
+      passengers: input.passengers,
+      smallLuggage: input.smallLuggage,
+      largeLuggage: input.largeLuggage
+    });
+  } catch (error) {
+    throw new Error(callableErrorMessage(error, "Could not load booking catalog."));
+  }
+
+  const data = result.data ?? {};
+  const addons: PricingAddon[] = (data.addons ?? []).map((addon) => ({
+    id: addon.id,
+    title: addon.title,
+    price: addon.price,
+    isEnabled: true,
+    tripTypes: Array.isArray(addon.tripTypes) ? addon.tripTypes : [],
+    vehicleClassIds: Array.isArray(addon.vehicleClassIds) ? addon.vehicleClassIds : []
+  }));
+
   return {
-    country,
-    proximity: proximityFromBranches(active)
+    branches: Array.isArray(data.branches) ? data.branches : [],
+    mapbox: {
+      country: data.mapbox?.country ?? null,
+      proximity: data.mapbox?.proximity ?? null
+    },
+    vehicleClasses: Array.isArray(data.vehicleClasses) ? data.vehicleClasses : [],
+    addons
   };
 }

@@ -64,7 +64,7 @@ export function SummaryView() {
 
   useEffect(() => {
     if (authReady && !emailAuthed) {
-      router.replace("/book/payment");
+      router.replace("/booking/payment");
     }
   }, [authReady, emailAuthed, router]);
 
@@ -113,7 +113,7 @@ export function SummaryView() {
 
   if (!allowed || !authReady || !emailAuthed) {
     return (
-      <BookingChrome step="summary" backHref="/book/payment">
+      <BookingChrome step="summary">
         <p className="text-muted-foreground text-sm">Preparing summary…</p>
       </BookingChrome>
     );
@@ -127,7 +127,7 @@ export function SummaryView() {
       : null;
 
   return (
-    <BookingChrome step="summary" backHref="/book/payment">
+    <BookingChrome step="summary">
       <div className="pb-28">
         <div className="mb-8 space-y-2">
           <p className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
@@ -217,8 +217,8 @@ export function SummaryView() {
                   onPaid={() =>
                     router.push(
                       tripId
-                        ? `/book/confirmed?tripId=${encodeURIComponent(tripId)}`
-                        : "/book/confirmed"
+                        ? `/booking/confirmed?tripId=${encodeURIComponent(tripId)}`
+                        : "/booking/confirmed"
                     )
                   }
                   onError={setError}
@@ -238,7 +238,7 @@ export function SummaryView() {
           <div className="border-border bg-background fixed inset-x-0 bottom-0 border-t px-4 py-4">
             <div className="mx-auto flex max-w-3xl gap-3">
               <Link
-                href="/book/payment"
+                href="/booking/payment"
                 className={cn(buttonVariants({ variant: "outline", size: "lg" }), "flex-1")}>
                 Back
               </Link>

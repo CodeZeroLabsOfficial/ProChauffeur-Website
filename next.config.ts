@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   },
   // Avoid auto-generating AGENTS.md / CLAUDE.md into the repo.
   agentRules: false,
+  async redirects() {
+    return [
+      { source: "/book", destination: "/booking", permanent: true },
+      { source: "/book/:path*", destination: "/booking/:path*", permanent: true }
+    ];
+  },
   async headers() {
     return [
       {

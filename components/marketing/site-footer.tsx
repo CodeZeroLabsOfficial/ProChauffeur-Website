@@ -12,7 +12,7 @@ export function SiteFooter() {
           <Link href="/contact" className="hover:text-foreground transition-colors">
             Contact
           </Link>
-          <Link href="/book" className="hover:text-foreground transition-colors">
+          <Link href="/booking" className="hover:text-foreground transition-colors">
             Book
           </Link>
         </nav>

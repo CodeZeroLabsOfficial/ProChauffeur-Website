@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 
+import { formatMoney } from "@/lib/booking/quote-api";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +10,17 @@ type VehicleClassListProps = {
   classes: VehicleClass[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  quoteTotal?: number | null;
+  currencyCode?: string;
 };
 
-export function VehicleClassList({ classes, selectedId, onSelect }: VehicleClassListProps) {
+export function VehicleClassList({
+  classes,
+  selectedId,
+  onSelect,
+  quoteTotal = null,
+  currencyCode = "AUD"
+}: VehicleClassListProps) {
   if (classes.length === 0) {
     return <p className="text-muted-foreground text-sm">No vehicle classes available yet.</p>;
   }
@@ -40,7 +49,14 @@ export function VehicleClassList({ classes, selectedId, onSelect }: VehicleClass
                   />
                 ) : null}
               </div>
-              <p className="font-medium">{vehicleClass.displayName}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium">{vehicleClass.displayName}</p>
+                {selected && quoteTotal != null ? (
+                  <p className="text-sm font-medium tabular-nums">
+                    {formatMoney(quoteTotal, currencyCode)}
+                  </p>
+                ) : null}
+              </div>
               <p className="text-muted-foreground mt-1 text-xs">
                 {vehicleClass.capacity.passengerCount} passengers · {vehicleClass.bodyType}
               </p>

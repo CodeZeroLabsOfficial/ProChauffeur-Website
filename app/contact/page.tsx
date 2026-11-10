@@ -12,7 +12,7 @@ export default function ContactPage() {
           <Link href="/" className="font-heading text-lg tracking-tight">
             Elite Chauffeurs
           </Link>
-          <Link href="/book" className={cn(buttonVariants())}>
+          <Link href="/booking" className={cn(buttonVariants())}>
             Book
           </Link>
         </div>

@@ -8,7 +8,3 @@ export type PricingAddon = {
   tripTypes: TripType[];
   vehicleClassIds: string[];
 };
-
-export type PricingConfig = {
-  addons: PricingAddon[];
-};

@@ -10,7 +10,7 @@ Customer-facing marketing site and booking funnel for the Elite Chauffeurs brand
 
 ## Booking funnel
 
-`/book` → `/book/details` → `/book/payment` (email OTP) → `/book/summary` (confirm + Stripe) → `/book/confirmed`
+`/booking` → `/booking/details` → `/booking/payment` (email OTP) → `/booking/summary` (confirm + Stripe) → `/booking/confirmed`
 
 Guest fare estimate uses Anonymous Auth. Email OTP is required before payment and confirm.
 
@@ -18,7 +18,7 @@ Guest fare estimate uses Anonymous Auth. Email OTP is required before payment an
 
 1. Enable **Anonymous Auth** on the Firebase stamp (Authentication → Sign-in method). Required for guest fare estimates.
 2. Authorize this site’s domain under Firebase Authentication → Settings → Authorized domains (and Mapbox URL restrictions).
-3. Redeploy Cloud Functions so `buildTripQuote` allows anonymous retail quotes and OTP / `createTripCardPayment` are available.
+3. Redeploy Cloud Functions so `getBookingCatalog` and retail anonymous `buildTripQuote` are live, plus OTP / `createTripCardPayment`.
 4. Install and configure env:
 
 ```bash

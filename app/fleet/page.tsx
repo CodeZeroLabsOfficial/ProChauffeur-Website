@@ -12,7 +12,7 @@ export default function FleetPage() {
           <Link href="/" className="font-heading text-lg tracking-tight">
             Elite Chauffeurs
           </Link>
-          <Link href="/book" className={cn(buttonVariants())}>
+          <Link href="/booking" className={cn(buttonVariants())}>
             Book
           </Link>
         </div>
@@ -23,7 +23,7 @@ export default function FleetPage() {
           Vehicle classes for your Location will appear here. For now, start a fare estimate to see
           what is available to book.
         </p>
-        <Link href="/book" className={cn(buttonVariants({ size: "lg" }), "mt-4 w-fit")}>
+        <Link href="/booking" className={cn(buttonVariants({ size: "lg" }), "mt-4 w-fit")}>
           Get estimate
         </Link>
       </main>

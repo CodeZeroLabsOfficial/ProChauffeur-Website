@@ -2,12 +2,7 @@
 
 import { create } from "zustand";
 
-import {
-  fetchBranches,
-  fetchOperatingMapboxContext,
-  fetchPricingConfig,
-  fetchVehicleClasses
-} from "@/lib/booking/catalog";
+import { getBookingCatalog } from "@/lib/booking/catalog";
 import { filterEligibleVehicleClasses } from "@/lib/booking/eligibility";
 import { buildTripQuoteRemote } from "@/lib/booking/quote-api";
 import {
@@ -37,9 +32,7 @@ type BookingStore = {
   branchId: string | null;
   pricingNotice: string | null;
   isPickupOutsideServiceArea: boolean;
-  /** Union of Location `settings/locale.mapboxCountryCodes`. */
   mapboxCountry: string | null;
-  /** Default proximity from Location service-area centers. */
   mapboxProximity: CoordinateField | null;
 
   pickup: SelectedPlace | null;
@@ -126,6 +119,18 @@ async function resolvePlaceFromText(
   };
 }
 
+function filterAddonsForSelection(
+  addons: PricingAddon[],
+  tripType: TripType,
+  vehicleClassId: string | null
+): PricingAddon[] {
+  return addons.filter((addon) => {
+    if (!addon.tripTypes.includes(tripType)) return false;
+    if (addon.vehicleClassIds.length === 0) return true;
+    return vehicleClassId ? addon.vehicleClassIds.includes(vehicleClassId) : false;
+  });
+}
+
 export const useBookingStore = create<BookingStore>((set, get) => ({
   ready: false,
   bootError: null,
@@ -178,12 +183,11 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   async bootstrap(seed) {
     try {
       await ensureAnonymousAuth();
-      const branches = await fetchBranches();
-      const mapbox = await fetchOperatingMapboxContext(branches);
+      const catalog = await getBookingCatalog();
       set({
-        branches,
-        mapboxCountry: mapbox.country,
-        mapboxProximity: mapbox.proximity,
+        branches: catalog.branches,
+        mapboxCountry: catalog.mapbox.country,
+        mapboxProximity: catalog.mapbox.proximity,
         ready: true,
         bootError: null
       });
@@ -215,8 +219,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       }
 
       const searchOpts = {
-        country: mapbox.country,
-        proximity: mapbox.proximity
+        country: catalog.mapbox.country,
+        proximity: catalog.mapbox.proximity
       };
 
       if (seed?.pickupText) {
@@ -225,8 +229,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       }
       if (seed?.dropoffText) {
         const dropoff = await resolvePlaceFromText(seed.dropoffText, {
-          country: mapbox.country,
-          proximity: get().pickup?.coordinate ?? mapbox.proximity
+          country: catalog.mapbox.country,
+          proximity: get().pickup?.coordinate ?? catalog.mapbox.proximity
         });
         if (dropoff) get().setDropoff(dropoff);
       }
@@ -391,18 +395,28 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         throw error;
       }
 
-      const [route, vehicleClasses, pricing] = await Promise.all([
+      const tripType = get().tripType;
+      const passengers = get().passengers;
+      const smallLuggage = get().smallLuggage;
+      const largeLuggage = get().largeLuggage;
+
+      const [route, catalog] = await Promise.all([
         fetchDrivingRoute(pickup.coordinate, dropoff.coordinate),
-        fetchVehicleClasses(branchId),
-        fetchPricingConfig(branchId)
+        getBookingCatalog({
+          branchId,
+          tripType,
+          passengers,
+          smallLuggage,
+          largeLuggage
+        })
       ]);
 
-      const tripType = get().tripType;
+      const vehicleClasses = catalog.vehicleClasses;
       const bookable = filterEligibleVehicleClasses(vehicleClasses, {
         tripType,
-        passengers: get().passengers,
-        smallLuggage: get().smallLuggage,
-        largeLuggage: get().largeLuggage
+        passengers,
+        smallLuggage,
+        largeLuggage
       });
 
       let selectedVehicleClassId = get().selectedVehicleClassId;
@@ -410,13 +424,11 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         selectedVehicleClassId = bookable[0]?.id ?? null;
       }
 
-      const availableAddons = (pricing?.addons ?? []).filter((addon) => {
-        if (!addon.tripTypes.includes(tripType)) return false;
-        if (addon.vehicleClassIds.length === 0) return true;
-        return selectedVehicleClassId
-          ? addon.vehicleClassIds.includes(selectedVehicleClassId)
-          : false;
-      });
+      const availableAddons = filterAddonsForSelection(
+        catalog.addons,
+        tripType,
+        selectedVehicleClassId
+      );
 
       const selectedAddonIds = get().selectedAddonIds.filter((id) =>
         availableAddons.some((addon) => addon.id === id)
@@ -424,6 +436,9 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       set({
         branchId,
+        branches: catalog.branches.length > 0 ? catalog.branches : get().branches,
+        mapboxCountry: catalog.mapbox.country ?? get().mapboxCountry,
+        mapboxProximity: catalog.mapbox.proximity ?? get().mapboxProximity,
         vehicleClasses,
         selectedVehicleClassId,
         availableAddons,

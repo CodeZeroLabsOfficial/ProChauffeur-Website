@@ -16,10 +16,35 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
+  { label: "Services", href: "/#features" },
   { label: "Fleet", href: "/fleet" },
-  { label: "Features", href: "/#features" },
+  { label: "Business", href: "/business" },
   { label: "Contact", href: "/contact" }
 ] as const;
+
+const navLinkClassName =
+  "inline-flex items-center gap-2 text-sm font-medium text-white transition-colors hover:text-white/70";
+
+function SignInIcon({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "grid size-4 place-items-center rounded-[3px] border border-current",
+        className
+      )}
+      aria-hidden="true">
+      <svg viewBox="0 0 12 12" className="size-2.5" fill="none">
+        <path
+          d="M2.5 6h7M6.5 3.5 9.5 6l-3 2.5"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+}
 
 function Logo({ className }: { className?: string }) {
   return (
@@ -52,31 +77,16 @@ export function SiteHeader({ className }: { className?: string }) {
 
       <div className="col-start-2 hidden items-center gap-8 md:flex">
         {NAV_LINKS.map((link) => (
-          <Link
-            key={link.label}
-            href={link.href}
-            className="text-sm font-medium text-white/70 transition-colors hover:text-white">
+          <Link key={link.label} href={link.href} className={navLinkClassName}>
             {link.label}
           </Link>
         ))}
       </div>
 
       <div className="col-start-3 flex items-center justify-end gap-2 justify-self-end">
-        <Link
-          href="/book"
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "hidden text-white hover:bg-white/10 hover:text-white md:inline-flex"
-          )}>
+        <Link href="/booking" className={cn(navLinkClassName, "hidden md:inline-flex")}>
           Sign in
-        </Link>
-        <Link
-          href="/book"
-          className={cn(
-            buttonVariants({ size: "sm" }),
-            "hidden bg-white text-neutral-950 hover:bg-white/90 md:inline-flex"
-          )}>
-          Register
+          <SignInIcon />
         </Link>
 
         <Drawer
@@ -105,26 +115,13 @@ export function SiteHeader({ className }: { className?: string }) {
                 </Link>
               ))}
             </div>
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/book"
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "w-full border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                )}
-                onClick={() => setIsOpen(false)}>
-                Sign in
-              </Link>
-              <Link
-                href="/book"
-                className={cn(
-                  buttonVariants(),
-                  "w-full bg-white text-neutral-950 hover:bg-white/90"
-                )}
-                onClick={() => setIsOpen(false)}>
-                Register
-              </Link>
-            </div>
+            <Link
+              href="/booking"
+              className={cn(navLinkClassName, "py-2")}
+              onClick={() => setIsOpen(false)}>
+              Sign in
+              <SignInIcon />
+            </Link>
           </DrawerContent>
         </Drawer>
       </div>

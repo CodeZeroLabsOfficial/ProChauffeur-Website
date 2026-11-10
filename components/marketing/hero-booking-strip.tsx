@@ -10,11 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  fetchBranches,
-  fetchOperatingMapboxContext,
-  type OperatingMapboxContext
-} from "@/lib/booking/catalog";
+import { getBookingCatalog, type OperatingMapboxContext } from "@/lib/booking/catalog";
 import type { SelectedPlace } from "@/lib/booking/booking-store";
 import { ensureAnonymousAuth } from "@/lib/firebase/ensure-anonymous";
 import type { TripType } from "@/lib/models/enums";
@@ -77,9 +73,8 @@ export function HeroBookingStrip() {
     void (async () => {
       try {
         await ensureAnonymousAuth();
-        const branches = await fetchBranches();
-        const context = await fetchOperatingMapboxContext(branches);
-        if (!cancelled) setMapbox(context);
+        const catalog = await getBookingCatalog();
+        if (!cancelled) setMapbox(catalog.mapbox);
       } catch {
         if (!cancelled) setMapbox({ country: null, proximity: null });
       }
@@ -146,7 +141,7 @@ export function HeroBookingStrip() {
     if (isReturn) {
       params.set("scheduledReturnAt", scheduledReturnAt.toISOString());
     }
-    router.push(`/book?${params.toString()}`);
+    router.push(`/booking?${params.toString()}`);
   }
 
   return (

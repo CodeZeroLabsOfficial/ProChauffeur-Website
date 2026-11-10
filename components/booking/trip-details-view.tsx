@@ -35,7 +35,7 @@ export function TripDetailsView() {
 
   if (!allowed) {
     return (
-      <BookingChrome step="details" backHref="/book">
+      <BookingChrome step="details">
         <p className="text-muted-foreground text-sm">Loading trip details…</p>
       </BookingChrome>
     );
@@ -47,7 +47,7 @@ export function TripDetailsView() {
   const maxLarge = vehicleClass?.capacity.luggage.largeCount ?? 4;
 
   return (
-    <BookingChrome step="details" backHref="/book">
+    <BookingChrome step="details">
       <div className="pb-28">
         <div className="mb-8 space-y-2">
           <p className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
@@ -171,14 +171,14 @@ export function TripDetailsView() {
         <div className="border-border bg-background fixed inset-x-0 bottom-0 border-t px-4 py-4">
           <div className="mx-auto flex max-w-3xl gap-3">
             <Link
-              href="/book"
+              href="/booking"
               className={cn(buttonVariants({ variant: "outline", size: "lg" }), "flex-1")}>
               Back
             </Link>
             <button
               type="button"
               disabled={!canContinue}
-              onClick={() => router.push("/book/payment")}
+              onClick={() => router.push("/booking/payment")}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "flex-1",

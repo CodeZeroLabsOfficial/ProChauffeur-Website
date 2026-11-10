@@ -17,7 +17,7 @@ export function MarketingCta() {
           </p>
         </div>
         <Link
-          href="/book"
+          href="/booking"
           className={cn(
             buttonVariants({ size: "lg" }),
             "bg-white text-neutral-950 hover:bg-white/90"

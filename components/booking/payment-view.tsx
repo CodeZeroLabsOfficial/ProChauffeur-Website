@@ -40,14 +40,14 @@ export function PaymentView() {
 
   if (!allowed || !authReady) {
     return (
-      <BookingChrome step="payment" backHref="/book/details">
+      <BookingChrome step="payment">
         <p className="text-muted-foreground text-sm">Preparing payment…</p>
       </BookingChrome>
     );
   }
 
   return (
-    <BookingChrome step="payment" backHref="/book/details">
+    <BookingChrome step="payment">
       <div className="pb-28">
         <div className="mb-8 space-y-2">
           <p className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
@@ -104,14 +104,14 @@ export function PaymentView() {
         <div className="border-border bg-background fixed inset-x-0 bottom-0 border-t px-4 py-4">
           <div className="mx-auto flex max-w-3xl gap-3">
             <Link
-              href="/book/details"
+              href="/booking/details"
               className={cn(buttonVariants({ variant: "outline", size: "lg" }), "flex-1")}>
               Back
             </Link>
             <button
               type="button"
               disabled={!emailAuthed}
-              onClick={() => router.push("/book/summary")}
+              onClick={() => router.push("/booking/summary")}
               className={cn(
                 buttonVariants({ size: "lg" }),
                 "flex-1",

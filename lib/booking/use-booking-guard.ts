@@ -27,18 +27,18 @@ export function useBookingGuard(level: GuardLevel): boolean {
     if (!ready) return;
     if (level === "estimate") {
       if (!estimateOk) {
-        router.replace("/book");
+        router.replace("/booking");
         return;
       }
       setAllowed(true);
       return;
     }
     if (!estimateOk) {
-      router.replace("/book");
+      router.replace("/booking");
       return;
     }
     if (!detailsOk) {
-      router.replace("/book/details");
+      router.replace("/booking/details");
       return;
     }
     setAllowed(true);
