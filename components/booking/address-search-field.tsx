@@ -113,9 +113,7 @@ export function AddressSearchField({
 
   return (
     <div className={cn("relative", isHero ? "min-w-0" : "space-y-2", className)}>
-      <Label
-        htmlFor={id}
-        className={cn(isHero && "text-xs font-medium text-white/70")}>
+      <Label htmlFor={id} className={cn(isHero && "text-xs font-medium text-white/70")}>
         {label}
       </Label>
       <Input
@@ -142,7 +140,7 @@ export function AddressSearchField({
         }}
         className={
           isHero
-            ? "h-auto border-0 bg-transparent px-0 py-1 text-sm font-medium text-white shadow-none placeholder:text-white/45 focus-visible:ring-0 dark:bg-transparent"
+            ? "h-auto w-full border-0 bg-transparent px-0 py-1 text-sm font-medium text-white shadow-none placeholder:text-white/45 focus-visible:ring-0 dark:bg-transparent"
             : undefined
         }
       />

@@ -87,7 +87,10 @@ export function HeroDateTimeField({
     <div className={cn("min-w-0", className)}>
       <Label
         htmlFor={id}
-        className={cn("text-xs font-medium", isPlain ? "text-muted-foreground" : "text-white/70")}>
+        className={cn(
+          "text-xs font-medium",
+          isPlain ? "text-muted-foreground" : "text-white/70"
+        )}>
         {label}
       </Label>
       <Popover open={open} onOpenChange={setOpen}>

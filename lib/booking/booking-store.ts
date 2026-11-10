@@ -131,6 +131,17 @@ function filterAddonsForSelection(
   });
 }
 
+function reselectVehicleIfNeeded(
+  get: () => BookingStore,
+  set: (partial: Partial<BookingStore>) => void
+) {
+  const bookable = get().bookableVehicleClasses();
+  const selected = get().selectedVehicleClassId;
+  if (selected && !bookable.some((row) => row.id === selected)) {
+    set({ selectedVehicleClassId: bookable[0]?.id ?? null, selectedAddonIds: [] });
+  }
+}
+
 export const useBookingStore = create<BookingStore>((set, get) => ({
   ready: false,
   bootError: null,
@@ -285,31 +296,19 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
   setPassengers(count) {
     set({ passengers: Math.max(1, count), quote: null });
-    const bookable = get().bookableVehicleClasses();
-    const selected = get().selectedVehicleClassId;
-    if (selected && !bookable.some((row) => row.id === selected)) {
-      set({ selectedVehicleClassId: bookable[0]?.id ?? null, selectedAddonIds: [] });
-    }
+    reselectVehicleIfNeeded(get, set);
     void get().refreshRouteAndQuote();
   },
 
   setSmallLuggage(count) {
     set({ smallLuggage: Math.max(0, count), quote: null });
-    const bookable = get().bookableVehicleClasses();
-    const selected = get().selectedVehicleClassId;
-    if (selected && !bookable.some((row) => row.id === selected)) {
-      set({ selectedVehicleClassId: bookable[0]?.id ?? null, selectedAddonIds: [] });
-    }
+    reselectVehicleIfNeeded(get, set);
     void get().refreshRouteAndQuote();
   },
 
   setLargeLuggage(count) {
     set({ largeLuggage: Math.max(0, count), quote: null });
-    const bookable = get().bookableVehicleClasses();
-    const selected = get().selectedVehicleClassId;
-    if (selected && !bookable.some((row) => row.id === selected)) {
-      set({ selectedVehicleClassId: bookable[0]?.id ?? null, selectedAddonIds: [] });
-    }
+    reselectVehicleIfNeeded(get, set);
     void get().refreshRouteAndQuote();
   },
 

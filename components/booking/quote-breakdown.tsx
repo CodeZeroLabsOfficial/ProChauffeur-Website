@@ -13,7 +13,7 @@ export function QuoteBreakdown({ quote, route }: QuoteBreakdownProps) {
   const visibleLines = quote.breakdown.filter((line) => !line.isInternal);
 
   return (
-    <div className="border-border space-y-4 border p-5">
+    <div className="space-y-4">
       {route ? (
         <p className="text-muted-foreground text-sm">
           {formatDistanceKm(route.distanceMeters)} · {formatDurationMinutes(route.durationSeconds)}

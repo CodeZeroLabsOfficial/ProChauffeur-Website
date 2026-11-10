@@ -18,7 +18,7 @@ export default async function BookPage({ searchParams }: BookPageProps) {
   const hourlyHours = params.hourlyHours ? Number(params.hourlyHours) : undefined;
 
   return (
-    <BookingChrome step="estimate" showTripStrip>
+    <BookingChrome step="estimate" showTripStrip embedStepsInContent>
       <FareEstimateView
         seed={{
           pickupText: params.pickup,
