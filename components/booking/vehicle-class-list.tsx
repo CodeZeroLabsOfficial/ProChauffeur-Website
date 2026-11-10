@@ -6,6 +6,7 @@ import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/booking/quote-api";
+import type { QuoteResult } from "@/lib/models/quote";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
 import { cn } from "@/lib/utils";
 
@@ -15,16 +16,14 @@ type VehicleClassListProps = {
   classes: VehicleClass[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  quoteTotals?: Record<string, number>;
-  currencyCode?: string;
+  classQuotes?: Record<string, QuoteResult>;
 };
 
 export function VehicleClassList({
   classes,
   selectedId,
   onSelect,
-  quoteTotals = {},
-  currencyCode = "AUD"
+  classQuotes = {}
 }: VehicleClassListProps) {
   const trackRef = useRef<HTMLUListElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -73,7 +72,7 @@ export function VehicleClassList({
         className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {classes.map((vehicleClass) => {
           const isSelected = vehicleClass.id === selectedId;
-          const quoteTotal = quoteTotals[vehicleClass.id];
+          const classQuote = classQuotes[vehicleClass.id];
           return (
             <li
               key={vehicleClass.id}
@@ -105,9 +104,9 @@ export function VehicleClassList({
                     <p className="text-base font-medium leading-tight sm:text-lg">
                       {vehicleClass.displayName}
                     </p>
-                    {quoteTotal != null ? (
+                    {classQuote ? (
                       <p className="shrink-0 text-base font-medium tabular-nums">
-                        {formatMoney(quoteTotal, currencyCode)}
+                        {formatMoney(classQuote.displayTotal, classQuote.currencyCode)}
                       </p>
                     ) : null}
                   </div>

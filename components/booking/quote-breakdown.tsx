@@ -8,7 +8,10 @@ type QuoteBreakdownProps = {
 };
 
 export function QuoteBreakdown({ quote }: QuoteBreakdownProps) {
-  const fareAmount = Math.max(0, quote.displayTotal - quote.taxAmount);
+  const fareAmount =
+    typeof quote.subtotal === "number"
+      ? quote.subtotal
+      : Math.max(0, quote.displayTotal - quote.taxAmount);
 
   return (
     <div className="space-y-4">

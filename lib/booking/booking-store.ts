@@ -146,7 +146,21 @@ function reselectVehicleIfNeeded(
   }
 }
 
+const emptyQuoteState = {
+  route: null,
+  quote: null,
+  classQuotes: {} as Record<string, QuoteResult>,
+  branchId: null,
+  vehicleClasses: [] as VehicleClass[],
+  availableAddons: [] as PricingAddon[],
+  catalogAddons: [] as PricingAddon[],
+  isPickupOutsideServiceArea: false,
+  isRouting: false,
+  isQuoting: false
+};
+
 let quoteRequestSeq = 0;
+let selectedQuoteSeq = 0;
 
 export const useBookingStore = create<BookingStore>((set, get) => ({
   ready: false,
@@ -373,13 +387,13 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     const branchId = state.branchId;
     if (!pickup || !dropoff || !vehicleClassId || !branchId) return;
 
-    const requestId = ++quoteRequestSeq;
+    const requestId = ++selectedQuoteSeq;
     set({ isQuoting: true, quoteError: null });
 
     try {
       if (state.selectedAddonIds.length === 0) {
         const cached = state.classQuotes[vehicleClassId] ?? null;
-        if (requestId !== quoteRequestSeq) return;
+        if (requestId !== selectedQuoteSeq) return;
         set({ quote: cached, isQuoting: false, quoteError: null });
         return;
       }
@@ -396,10 +410,10 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         bookedHours: state.tripType === "hourly" ? state.hourlyHours : null,
         addonIds: state.selectedAddonIds
       });
-      if (requestId !== quoteRequestSeq) return;
+      if (requestId !== selectedQuoteSeq) return;
       set({ quote, isQuoting: false, quoteError: null });
     } catch (error) {
-      if (requestId !== quoteRequestSeq) return;
+      if (requestId !== selectedQuoteSeq) return;
       const message = error instanceof Error ? error.message : "Could not update the estimate.";
       set({ isQuoting: false, quoteError: message });
     }
@@ -412,18 +426,11 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
     if (!pickup || !dropoff) {
       quoteRequestSeq += 1;
+      selectedQuoteSeq += 1;
       set({
-        route: null,
-        quote: null,
-        classQuotes: {},
-        branchId: null,
-        vehicleClasses: [],
-        availableAddons: [],
-        catalogAddons: [],
-        isPickupOutsideServiceArea: false,
+        ...emptyQuoteState,
         pricingNotice: null,
-        isRouting: false,
-        isQuoting: false
+        quoteError: null
       });
       return;
     }
@@ -444,17 +451,10 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         if (error instanceof BranchResolveError) {
           if (requestId !== quoteRequestSeq) return;
           set({
+            ...emptyQuoteState,
             isPickupOutsideServiceArea: error.kind === "out_of_area",
             pricingNotice: error.message,
-            branchId: null,
-            vehicleClasses: [],
-            availableAddons: [],
-            catalogAddons: [],
-            route: null,
-            quote: null,
-            classQuotes: {},
-            isRouting: false,
-            isQuoting: false
+            quoteError: null
           });
           return;
         }

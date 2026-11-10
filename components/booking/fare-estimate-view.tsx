@@ -60,13 +60,6 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
   const classes = bookableVehicleClasses();
   const selected = selectedVehicleClass();
   const canContinue = canProceedFromEstimate();
-  const classQuoteTotals = Object.fromEntries(
-    Object.entries(classQuotes).map(([id, row]) => [id, row.displayTotal])
-  );
-  const classQuoteCurrency =
-    quote?.currencyCode ??
-    Object.values(classQuotes)[0]?.currencyCode ??
-    "AUD";
 
   if (bootError) {
     return (
@@ -112,8 +105,7 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
                 classes={classes}
                 selectedId={selectedVehicleClassId}
                 onSelect={selectVehicleClass}
-                quoteTotals={classQuoteTotals}
-                currencyCode={quote?.currencyCode ?? classQuoteCurrency}
+                classQuotes={classQuotes}
               />
             </section>
 
@@ -176,7 +168,7 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
 
         <aside
           className={cn(
-            "border-border bg-background space-y-4 border p-4",
+            "border-border bg-background space-y-5 border p-4",
             "lg:mt-10 lg:sticky lg:top-[6.5rem]"
           )}>
           <RouteMap
@@ -200,18 +192,12 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
           </div>
 
           {quote ? (
-            <div className="pt-2">
-              <QuoteBreakdown quote={quote} />
-            </div>
+            <QuoteBreakdown quote={quote} />
           ) : (
             <p className="text-muted-foreground text-sm">
               Enter pickup and drop-off to see an estimate.
             </p>
           )}
-
-          <p className="text-muted-foreground text-xs">
-            All amounts are estimates. Final fare is confirmed at booking.
-          </p>
 
           <Link
             href={canContinue ? "/booking/details" : "#"}

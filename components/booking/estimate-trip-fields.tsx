@@ -71,7 +71,7 @@ export function EstimateTripFields({ className }: { className?: string }) {
     );
   }
 
-  const pickupLabel = shortPlace(pickup?.addressLine, "Pickup address");
+  const pickupLabel = pickup?.addressLine?.trim() || "Pickup address";
   const dropoffLabel = shortPlace(dropoff?.addressLine, "Drop-off address");
   const scheduleLabel = format(scheduledPickupAt, "EEE d MMM HH:mm");
   const returnLabel =
