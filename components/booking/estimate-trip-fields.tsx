@@ -25,7 +25,7 @@ function shortPlace(addressLine: string | undefined, fallback: string) {
   const value = addressLine?.trim();
   if (!value) return fallback;
   const first = value.split(",")[0]?.trim() || value;
-  return first.length > 28 ? `${first.slice(0, 27)}…` : first;
+  return first.length > 44 ? `${first.slice(0, 43)}…` : first;
 }
 
 export function EstimateTripFields({ className }: { className?: string }) {
@@ -64,9 +64,15 @@ export function EstimateTripFields({ className }: { className?: string }) {
 
   if (!hasMounted) {
     return (
-      <div className={cn("flex min-w-0 flex-1 justify-center gap-2", className)} aria-hidden>
-        <div className="border-white/15 h-9 w-56 border bg-black/25 sm:w-72" />
+      <div
+        className={cn(
+          "grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2",
+          className
+        )}
+        aria-hidden>
+        <div className="border-white/15 h-9 w-full max-w-2xl justify-self-stretch border bg-black/25" />
         <div className="border-white/15 hidden h-9 w-40 border bg-black/25 sm:block" />
+        <div />
       </div>
     );
   }
@@ -82,13 +88,13 @@ export function EstimateTripFields({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 items-center justify-center gap-2 overflow-x-auto",
+        "grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2",
         className
       )}>
       <Popover open={routeOpen} onOpenChange={setRouteOpen}>
         <PopoverTrigger
           type="button"
-          className={cn(chipClass, "min-w-0 max-w-[min(100%,28rem)]")}>
+          className={cn(chipClass, "w-full min-w-0 max-w-2xl justify-self-stretch")}>
           <span className="truncate">{pickupLabel}</span>
           {isTransfer ? (
             <>
@@ -105,8 +111,8 @@ export function EstimateTripFields({ className }: { className?: string }) {
           )}
         </PopoverTrigger>
         <PopoverContent
-          align="center"
-          className="dark w-[min(92vw,22rem)] border-white/10 bg-neutral-950 p-3 text-white ring-white/10">
+          align="start"
+          className="dark w-[min(92vw,28rem)] border-white/10 bg-neutral-950 p-3 text-white ring-white/10">
           <div className="space-y-3">
             <AddressSearchField
               id="estimate-pickup"
@@ -183,6 +189,8 @@ export function EstimateTripFields({ className }: { className?: string }) {
           </div>
         </PopoverContent>
       </Popover>
+
+      <div aria-hidden className="min-w-0" />
     </div>
   );
 }

@@ -99,16 +99,18 @@ export function VehicleClassList({
                     />
                   ) : null}
                 </div>
+                <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-4 pt-3 pb-10">
+                  <p className="font-medium leading-tight text-white">
+                    {vehicleClass.displayName}
+                  </p>
+                </div>
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pt-16 pb-4 text-white">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium leading-tight">{vehicleClass.displayName}</p>
-                    {isSelected && quoteTotal != null ? (
-                      <p className="shrink-0 text-sm font-medium tabular-nums">
-                        {formatMoney(quoteTotal, currencyCode)}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/90">
+                  {isSelected && quoteTotal != null ? (
+                    <p className="mb-2 text-sm font-medium tabular-nums">
+                      {formatMoney(quoteTotal, currencyCode)}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/90">
                     <span className="inline-flex items-center gap-1">
                       <User className="size-3.5" aria-hidden />
                       {vehicleClass.capacity.passengerCount}
@@ -121,9 +123,6 @@ export function VehicleClassList({
                       <Briefcase className="size-3.5" aria-hidden />
                       {vehicleClass.capacity.luggage.largeCount} large
                     </span>
-                    {vehicleClass.bodyType ? (
-                      <span className="text-white/75">{vehicleClass.bodyType}</span>
-                    ) : null}
                   </div>
                 </div>
               </button>

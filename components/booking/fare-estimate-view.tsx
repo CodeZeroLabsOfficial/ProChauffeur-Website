@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { AddonsList } from "@/components/booking/addons-list";
 import { BookingStepsBar } from "@/components/booking/booking-chrome";
+import { QuantityStepper } from "@/components/booking/quantity-stepper";
 import { QuoteBreakdown } from "@/components/booking/quote-breakdown";
 import { RouteMap } from "@/components/booking/route-map";
 import { VehicleClassList } from "@/components/booking/vehicle-class-list";
@@ -44,6 +45,10 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
   const toggleAddon = useBookingStore((s) => s.toggleAddon);
   const bookableVehicleClasses = useBookingStore((s) => s.bookableVehicleClasses);
   const selectedVehicleClass = useBookingStore((s) => s.selectedVehicleClass);
+  const smallLuggage = useBookingStore((s) => s.smallLuggage);
+  const largeLuggage = useBookingStore((s) => s.largeLuggage);
+  const setSmallLuggage = useBookingStore((s) => s.setSmallLuggage);
+  const setLargeLuggage = useBookingStore((s) => s.setLargeLuggage);
   const canProceedFromEstimate = useBookingStore((s) => s.canProceedFromEstimate);
 
   useEffect(() => {
@@ -129,6 +134,26 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
                 )}
               </section>
             ) : null}
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-medium">Luggage</h2>
+              <QuantityStepper
+                id="estimate-small-luggage"
+                label="Small bags"
+                value={smallLuggage}
+                min={0}
+                max={selected?.capacity.luggage.smallCount}
+                onChange={setSmallLuggage}
+              />
+              <QuantityStepper
+                id="estimate-large-luggage"
+                label="Large bags"
+                value={largeLuggage}
+                min={0}
+                max={selected?.capacity.luggage.largeCount}
+                onChange={setLargeLuggage}
+              />
+            </section>
 
             <section className="space-y-3">
               <h2 className="text-lg font-medium">Add-ons</h2>
