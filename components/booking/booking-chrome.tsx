@@ -27,45 +27,51 @@ export function BookingChrome({
   contentClassName
 }: BookingChromeProps) {
   const activeIndex = STEPS.findIndex((row) => row.id === step);
+  const contentWidth = showTripStrip ? "max-w-6xl" : "max-w-3xl";
 
   return (
     <div className="bg-background flex min-h-full flex-col">
-      <SiteHeader
-        showSignIn={false}
-        center={showTripStrip ? <EstimateTripFields /> : undefined}
-      />
+      <div className="bg-background sticky top-0 z-40">
+        <SiteHeader
+          showSignIn={false}
+          center={showTripStrip ? <EstimateTripFields /> : undefined}
+        />
 
-      <div className="border-border border-b px-4 py-3 sm:px-6">
-        <nav
-          aria-label="Booking steps"
-          className="text-muted-foreground mx-auto flex max-w-6xl gap-2 overflow-x-auto text-xs font-medium tracking-wide uppercase">
-          {STEPS.map((row, index) => {
-            const isActive = row.id === step;
-            const isPast = index < activeIndex;
-            return (
-              <span
-                key={row.id}
-                className={cn(
-                  "shrink-0",
-                  isActive && "text-foreground",
-                  isPast && "text-foreground/70"
-                )}>
-                {row.label}
-                {index < STEPS.length - 1 ? (
-                  <span className="text-muted-foreground/50 mx-2" aria-hidden>
-                    /
-                  </span>
-                ) : null}
-              </span>
-            );
-          })}
-        </nav>
+        <div className="border-border border-b">
+          <nav
+            aria-label="Booking steps"
+            className={cn(
+              "text-muted-foreground mx-auto flex gap-2 overflow-x-auto px-4 py-1.5 text-xs font-medium tracking-wide uppercase sm:px-6",
+              contentWidth
+            )}>
+            {STEPS.map((row, index) => {
+              const isActive = row.id === step;
+              const isPast = index < activeIndex;
+              return (
+                <span
+                  key={row.id}
+                  className={cn(
+                    "shrink-0",
+                    isActive && "text-foreground",
+                    isPast && "text-foreground/70"
+                  )}>
+                  {row.label}
+                  {index < STEPS.length - 1 ? (
+                    <span className="text-muted-foreground/50 mx-2" aria-hidden>
+                      /
+                    </span>
+                  ) : null}
+                </span>
+              );
+            })}
+          </nav>
+        </div>
       </div>
 
       <main
         className={cn(
-          "mx-auto w-full flex-1 px-4 py-8 sm:px-6",
-          showTripStrip ? "max-w-6xl" : "max-w-3xl",
+          "mx-auto w-full flex-1 px-4 pt-3 pb-8 sm:px-6",
+          contentWidth,
           contentClassName
         )}>
         {children}

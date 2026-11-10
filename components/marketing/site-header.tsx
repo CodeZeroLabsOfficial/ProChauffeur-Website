@@ -78,13 +78,14 @@ export function SiteHeader({ className, center, showSignIn = true }: SiteHeaderP
   return (
     <nav
       className={cn(
-        "flex h-16 w-full items-center gap-3 border-b border-white/10 bg-neutral-950 px-4 text-white lg:px-6",
+        "flex w-full items-center gap-3 border-b border-white/10 bg-neutral-950 px-4 text-white lg:px-6",
+        hasCenter ? "min-h-16 py-2" : "h-16",
         className
       )}>
       <Logo />
 
       {hasCenter ? (
-        <div className="flex min-w-0 flex-1 items-center justify-center">{center}</div>
+        <div className="min-w-0 flex-1">{center}</div>
       ) : (
         <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (

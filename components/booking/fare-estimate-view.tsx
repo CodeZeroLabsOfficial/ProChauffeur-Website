@@ -151,7 +151,7 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
           </section>
         </div>
 
-        <aside className="border-border bg-background space-y-4 border p-4 lg:sticky lg:top-6">
+        <aside className="border-border bg-background space-y-4 border p-4 lg:sticky lg:top-[7.5rem]">
           <RouteMap
             pickup={pickup?.coordinate ?? null}
             dropoff={dropoff?.coordinate ?? null}
