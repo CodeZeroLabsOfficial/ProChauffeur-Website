@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Briefcase, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { Briefcase, ChevronLeft, ChevronRight, Users } from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -73,22 +73,25 @@ export function VehicleClassList({
         className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {classes.map((vehicleClass) => {
           const isSelected = vehicleClass.id === selectedId;
+          const luggageTotal =
+            vehicleClass.capacity.luggage.smallCount +
+            vehicleClass.capacity.luggage.largeCount;
           return (
             <li
               key={vehicleClass.id}
               data-vehicle-card
-              className="w-[min(85%,20rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)]">
+              className="w-[min(85%,18rem)] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)]">
               <button
                 type="button"
                 onClick={() => onSelect(vehicleClass.id)}
                 aria-pressed={isSelected}
                 className={cn(
-                  "border-border relative aspect-[4/3] w-full overflow-hidden border text-left transition-[border-color,box-shadow]",
+                  "bg-background flex w-full flex-col overflow-hidden rounded-2xl border text-left transition-[border-color,box-shadow]",
                   isSelected
-                    ? "border-foreground ring-foreground/20 ring-2"
-                    : "hover:border-foreground/40"
+                    ? "border-foreground ring-foreground/15 ring-2"
+                    : "border-border hover:border-foreground/40"
                 )}>
-                <div className="bg-muted absolute inset-0">
+                <div className="bg-muted relative aspect-square w-full overflow-hidden">
                   {vehicleClass.imageUrl ? (
                     <Image
                       src={vehicleClass.imageUrl}
@@ -99,29 +102,23 @@ export function VehicleClassList({
                     />
                   ) : null}
                 </div>
-                <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 to-transparent px-4 pt-3 pb-10">
-                  <p className="font-medium leading-tight text-white">
-                    {vehicleClass.displayName}
-                  </p>
-                </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pt-16 pb-4 text-white">
-                  {isSelected && quoteTotal != null ? (
-                    <p className="mb-2 text-sm font-medium tabular-nums">
-                      {formatMoney(quoteTotal, currencyCode)}
-                    </p>
-                  ) : null}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/90">
-                    <span className="inline-flex items-center gap-1">
-                      <User className="size-3.5" aria-hidden />
+                <div className="space-y-2 px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium leading-tight">{vehicleClass.displayName}</p>
+                    {isSelected && quoteTotal != null ? (
+                      <p className="shrink-0 text-sm font-medium tabular-nums">
+                        {formatMoney(quoteTotal, currencyCode)}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Users className="size-3.5" aria-hidden />
                       {vehicleClass.capacity.passengerCount}
                     </span>
-                    <span className="inline-flex items-center gap-1">
+                    <span className="inline-flex items-center gap-1.5">
                       <Briefcase className="size-3.5" aria-hidden />
-                      {vehicleClass.capacity.luggage.smallCount} small
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Briefcase className="size-3.5" aria-hidden />
-                      {vehicleClass.capacity.luggage.largeCount} large
+                      {luggageTotal}
                     </span>
                   </div>
                 </div>
@@ -133,11 +130,16 @@ export function VehicleClassList({
 
       <div className="flex items-center gap-4">
         {selected ? (
-          <a
-            href="#vehicle-class-details"
-            className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline">
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
+            onClick={() => {
+              document
+                .getElementById("vehicle-class-details")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}>
             ↓ Explore {selected.displayName} details
-          </a>
+          </button>
         ) : null}
         {showControls ? (
           <div className="ml-auto flex shrink-0 gap-1">
