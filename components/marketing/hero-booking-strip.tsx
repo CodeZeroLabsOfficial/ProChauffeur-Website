@@ -64,6 +64,7 @@ export function HeroBookingStrip() {
   const groupRef = useRef<HTMLDivElement>(null);
   const transferRef = useRef<HTMLButtonElement>(null);
   const hourlyRef = useRef<HTMLButtonElement>(null);
+  const openItineraryFromChevronRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -164,7 +165,19 @@ export function HeroBookingStrip() {
           }}
         />
 
-        <Popover open={itineraryOpen} onOpenChange={setItineraryOpen}>
+        <Popover
+          open={itineraryOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setItineraryOpen(false);
+              openItineraryFromChevronRef.current = false;
+              return;
+            }
+            if (openItineraryFromChevronRef.current) {
+              setItineraryOpen(true);
+              openItineraryFromChevronRef.current = false;
+            }
+          }}>
           <PopoverTrigger
             ref={transferRef}
             type="button"
@@ -172,15 +185,29 @@ export function HeroBookingStrip() {
               pillClass,
               isTransfer ? "text-neutral-950" : "text-white/80 hover:text-white"
             )}
-            aria-label={`${transferLabel}. Choose One-way or Return`}>
+            aria-label={`${transferLabel}. Use the arrow to choose One-way or Return`}
+            onClick={(event) => {
+              const fromChevron = (event.target as HTMLElement).closest(
+                "[data-itinerary-chevron]"
+              );
+              if (fromChevron) {
+                openItineraryFromChevronRef.current = true;
+                return;
+              }
+              openItineraryFromChevronRef.current = false;
+              setTripType("transfer");
+              setItineraryOpen(false);
+            }}>
             {transferLabel}
-            <ChevronDown
-              className={cn(
-                "size-3.5 transition-transform duration-300",
-                itineraryOpen && "rotate-180",
-                isTransfer ? "opacity-70" : "opacity-60"
-              )}
-            />
+            <span data-itinerary-chevron className="inline-flex" aria-hidden>
+              <ChevronDown
+                className={cn(
+                  "size-3.5 transition-transform duration-300",
+                  itineraryOpen && "rotate-180",
+                  isTransfer ? "opacity-70" : "opacity-60"
+                )}
+              />
+            </span>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-44 p-1">
             <button
