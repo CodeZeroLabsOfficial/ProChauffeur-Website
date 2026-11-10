@@ -2,7 +2,12 @@
 
 import { create } from "zustand";
 
-import { fetchBranches, fetchPricingConfig, fetchVehicleClasses } from "@/lib/booking/catalog";
+import {
+  fetchBranches,
+  fetchOperatingMapboxContext,
+  fetchPricingConfig,
+  fetchVehicleClasses
+} from "@/lib/booking/catalog";
 import { filterEligibleVehicleClasses } from "@/lib/booking/eligibility";
 import { buildTripQuoteRemote } from "@/lib/booking/quote-api";
 import {
@@ -33,6 +38,10 @@ type BookingStore = {
   branchId: string | null;
   pricingNotice: string | null;
   isPickupOutsideServiceArea: boolean;
+  /** Union of Location `settings/locale.mapboxCountryCodes`. */
+  mapboxCountry: string | null;
+  /** Default proximity from Location service-area centers. */
+  mapboxProximity: CoordinateField | null;
 
   pickup: SelectedPlace | null;
   dropoff: SelectedPlace | null;
@@ -91,11 +100,18 @@ function defaultPickupDate(): Date {
   return d;
 }
 
-async function resolvePlaceFromText(text: string): Promise<SelectedPlace | null> {
+async function resolvePlaceFromText(
+  text: string,
+  options?: { country?: string | null; proximity?: CoordinateField | null }
+): Promise<SelectedPlace | null> {
   const trimmed = text.trim();
   if (!trimmed) return null;
   const { searchAddresses } = await import("@/lib/mapbox/geocode");
-  const results = await searchAddresses(trimmed, { limit: 1 });
+  const results = await searchAddresses(trimmed, {
+    limit: 1,
+    country: options?.country,
+    proximity: options?.proximity
+  });
   const first = results[0] as GeocodeSuggestion | undefined;
   if (!first) return null;
   return {
@@ -112,6 +128,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   branchId: null,
   pricingNotice: null,
   isPickupOutsideServiceArea: false,
+  mapboxCountry: null,
+  mapboxProximity: null,
 
   pickup: null,
   dropoff: null,
@@ -156,7 +174,14 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     try {
       await ensureAnonymousAuth();
       const branches = await fetchBranches();
-      set({ branches, ready: true, bootError: null });
+      const mapbox = await fetchOperatingMapboxContext(branches);
+      set({
+        branches,
+        mapboxCountry: mapbox.country,
+        mapboxProximity: mapbox.proximity,
+        ready: true,
+        bootError: null
+      });
 
       if (seed?.tripType === "transfer" || seed?.tripType === "hourly") {
         set({ tripType: seed.tripType });
@@ -184,12 +209,20 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         }
       }
 
+      const searchOpts = {
+        country: mapbox.country,
+        proximity: mapbox.proximity
+      };
+
       if (seed?.pickupText) {
-        const pickup = await resolvePlaceFromText(seed.pickupText);
+        const pickup = await resolvePlaceFromText(seed.pickupText, searchOpts);
         if (pickup) get().setPickup(pickup);
       }
       if (seed?.dropoffText) {
-        const dropoff = await resolvePlaceFromText(seed.dropoffText);
+        const dropoff = await resolvePlaceFromText(seed.dropoffText, {
+          country: mapbox.country,
+          proximity: get().pickup?.coordinate ?? mapbox.proximity
+        });
         if (dropoff) get().setDropoff(dropoff);
       }
     } catch (error) {

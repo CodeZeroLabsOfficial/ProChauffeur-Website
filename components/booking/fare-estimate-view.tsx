@@ -33,6 +33,8 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
   const dropoff = useBookingStore((s) => s.dropoff);
   const setPickup = useBookingStore((s) => s.setPickup);
   const setDropoff = useBookingStore((s) => s.setDropoff);
+  const mapboxCountry = useBookingStore((s) => s.mapboxCountry);
+  const mapboxProximity = useBookingStore((s) => s.mapboxProximity);
   const pricingNotice = useBookingStore((s) => s.pricingNotice);
   const quoteError = useBookingStore((s) => s.quoteError);
   const route = useBookingStore((s) => s.route);
@@ -104,6 +106,8 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
             placeholder="Pickup address"
             value={pickup}
             onSelect={setPickup}
+            country={mapboxCountry}
+            proximity={mapboxProximity}
           />
           <AddressSearchField
             id="dropoff"
@@ -111,6 +115,8 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
             placeholder="Drop-off address"
             value={dropoff}
             onSelect={setDropoff}
+            country={mapboxCountry}
+            proximity={pickup?.coordinate ?? mapboxProximity}
           />
         </section>
 

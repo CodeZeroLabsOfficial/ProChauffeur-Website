@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { AddressSearchField } from "@/components/booking/address-search-field";
 import { HeroDateTimeField } from "@/components/marketing/hero-date-time-field";
@@ -10,7 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  fetchBranches,
+  fetchOperatingMapboxContext,
+  type OperatingMapboxContext
+} from "@/lib/booking/catalog";
 import type { SelectedPlace } from "@/lib/booking/booking-store";
+import { ensureAnonymousAuth } from "@/lib/firebase/ensure-anonymous";
 import type { TripType } from "@/lib/models/enums";
 import { cn } from "@/lib/utils";
 
@@ -50,10 +56,31 @@ export function HeroBookingStrip() {
     defaultReturnDate(defaultPickupDate())
   );
   const [thumb, setThumb] = useState({ left: 0, width: 0, ready: false });
+  const [mapbox, setMapbox] = useState<OperatingMapboxContext>({
+    country: null,
+    proximity: null
+  });
 
   const groupRef = useRef<HTMLDivElement>(null);
   const transferRef = useRef<HTMLButtonElement>(null);
   const hourlyRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        await ensureAnonymousAuth();
+        const branches = await fetchBranches();
+        const context = await fetchOperatingMapboxContext(branches);
+        if (!cancelled) setMapbox(context);
+      } catch {
+        if (!cancelled) setMapbox({ country: null, proximity: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const isTransfer = tripType === "transfer";
   const isReturn = isTransfer && itinerary === "return";
@@ -200,6 +227,8 @@ export function HeroBookingStrip() {
             value={pickup}
             onSelect={setPickup}
             onQueryChange={setPickupText}
+            country={mapbox.country}
+            proximity={mapbox.proximity}
             className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
           />
 
@@ -212,6 +241,8 @@ export function HeroBookingStrip() {
               value={dropoff}
               onSelect={setDropoff}
               onQueryChange={setDropoffText}
+              country={mapbox.country}
+              proximity={pickup?.coordinate ?? mapbox.proximity}
               className="border-white/15 min-w-0 flex-1 border-b px-3 py-2 sm:border-r sm:border-b-0"
             />
           ) : (

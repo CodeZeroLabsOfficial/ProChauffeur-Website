@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import type { SelectedPlace } from "@/lib/booking/booking-store";
+import type { CoordinateField } from "@/lib/models/coordinate";
 import { searchAddresses, type GeocodeSuggestion } from "@/lib/mapbox/geocode";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,10 @@ type AddressSearchFieldProps = {
   onSelect: (place: SelectedPlace | null) => void;
   /** Fires on every keystroke so parents can seed free-text before a suggestion is chosen. */
   onQueryChange?: (query: string) => void;
+  /** Location locale union (`mapboxCountryCodes`), passed to Mapbox `country`. */
+  country?: string | null;
+  /** Bias suggestions toward this coordinate (pickup or Location center). */
+  proximity?: CoordinateField | null;
   /** `hero` matches the marketing strip (light-on-dark). */
   variant?: "default" | "hero";
   className?: string;
@@ -28,6 +33,8 @@ export function AddressSearchField({
   value,
   onSelect,
   onQueryChange,
+  country = null,
+  proximity = null,
   variant = "default",
   className
 }: AddressSearchFieldProps) {
@@ -53,7 +60,7 @@ export function AddressSearchField({
     const handle = window.setTimeout(() => {
       void (async () => {
         try {
-          const rows = await searchAddresses(query);
+          const rows = await searchAddresses(query, { country, proximity });
           setSuggestions(rows);
           setSearchError(null);
           setOpen(true);
@@ -64,7 +71,13 @@ export function AddressSearchField({
       })();
     }, 280);
     return () => window.clearTimeout(handle);
-  }, [query, value?.addressLine]);
+  }, [
+    query,
+    value?.addressLine,
+    country,
+    proximity?.latitude,
+    proximity?.longitude
+  ]);
 
   return (
     <div className={cn("relative", isHero ? "min-w-0" : "space-y-2", className)}>

@@ -9,6 +9,12 @@ export type GeocodeSuggestion = {
   postcode: string;
 };
 
+export type AddressSearchOptions = {
+  country?: string | null;
+  proximity?: CoordinateField | null;
+  limit?: number;
+};
+
 type MapboxFeature = {
   id?: string;
   place_name?: string;
@@ -26,7 +32,7 @@ function postcodeFromFeature(feature: MapboxFeature): string {
 
 export async function searchAddresses(
   query: string,
-  options?: { country?: string; limit?: number }
+  options?: AddressSearchOptions
 ): Promise<GeocodeSuggestion[]> {
   const trimmed = query.trim();
   if (trimmed.length < 3) return [];
@@ -36,9 +42,23 @@ export async function searchAddresses(
     access_token: token,
     autocomplete: "true",
     limit: String(options?.limit ?? 5),
-    types: "address,poi,place"
+    types: "address,poi,place",
+    language: "en"
   });
-  if (options?.country) params.set("country", options.country);
+
+  const country = options?.country?.trim();
+  if (country) {
+    params.set("country", country.toLowerCase());
+  }
+
+  const proximity = options?.proximity;
+  if (
+    proximity &&
+    Number.isFinite(proximity.longitude) &&
+    Number.isFinite(proximity.latitude)
+  ) {
+    params.set("proximity", `${proximity.longitude},${proximity.latitude}`);
+  }
 
   const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(trimmed)}.json?${params}`;
   const response = await fetch(url);
