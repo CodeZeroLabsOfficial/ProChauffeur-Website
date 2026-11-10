@@ -1,0 +1,25 @@
+---
+description: Guest quote vs auth-at-confirm boundaries and public data surface
+alwaysApply: true
+---
+
+# Security — public surface
+
+## Auth gates
+
+- **Anonymous Auth** may be used for fare estimate (catalog + retail quote).
+- **Email OTP** (create account / sign-in) before confirm booking and before loading saved payment methods or corporate settlement.
+- Never call staff/admin portal APIs. Use Firebase client + existing callables only.
+
+## Data
+
+- Vehicle classes: public read OK; always filter `isEnabled` + `isVisible` + capacity + trip type.
+- Pricing / add-ons: only via authenticated session (including anonymous) or sanitized server paths — do not open full pricing internals to the anonymous web without auth.
+- Fare math stays on the server (`buildTripQuote`). Never trust client totals at checkout.
+- No service-account keys or Stripe secrets in this app’s client bundle.
+
+## Hygiene
+
+- Validate env with fail-fast helpers; only `NEXT_PUBLIC_*` in the browser.
+- Do not log PII (addresses, phones, payment refs) to console or analytics.
+- Treat user-provided strings as data (no unsanitized HTML).

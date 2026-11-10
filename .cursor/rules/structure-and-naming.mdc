@@ -1,0 +1,57 @@
+---
+description: Folder layout, domain glossary, and Next.js/TypeScript naming standards
+alwaysApply: true
+---
+
+# Structure and naming
+
+## Folders
+
+```text
+app/                 # App Router pages only
+components/
+  marketing/         # navbar, hero, features, CTA
+  booking/           # fare estimate + wizard steps
+  ui/                # design primitives only
+lib/
+  models/            # wire-aligned types
+  booking/           # flow, eligibility
+  firebase/
+  mapbox/
+  env.ts
+```
+
+Keep marketing and booking code separate. Do not put domain logic in `page.tsx` files.
+
+## Domain glossary (wire vs UI)
+
+| UI copy | Code / Firestore | Avoid |
+|---------|------------------|--------|
+| Location (city/market) | `branch`, `branchId`, `branches/{id}` | Calling an office a Location; `locationId` for branch |
+| Office | office / fleet `locations/…` | “depot” in new copy |
+| Vehicle class | `vehicleClassId`, `vehicle_classes/{id}` | Renaming product slugs |
+| Pickup / Drop-off | `pickup`, `dropoff` | `dropOff`, `checkIn`/`checkOut` for trips |
+| Pickup time | `scheduledPickupAt` | Inventing parallel schedule fields |
+| Add-ons | `addonIds`, `PricingAddon` | `extras` as a second schema |
+| Passengers | passenger counts on booking | Calling the account “passenger” |
+| Customer | role `customer`, `customerID` on trips | Using “guest” for fare fields |
+| Guest | anonymous session only (`isGuest`) | Guest as trip headcount |
+| Trip / booking | `trips/{id}`, booking flow | `order`, `cart`, `reservation` as schema |
+
+Wire field names stay one-word / product-canonical (`dropoff`, not `drop_off`). Format labels for display separately.
+
+## Code style (common web standards)
+
+| Kind | Convention | Example |
+|------|------------|---------|
+| Route segments | `kebab-case` | `/book/trip-details` |
+| Component files | `kebab-case.tsx` | `vehicle-class-list.tsx` |
+| Components | `PascalCase` | `VehicleClassList` |
+| Hooks | `use` + camelCase; file `use-*.ts` | `useBookingFlow` |
+| Lib modules | `kebab-case.ts` | `booking-eligibility.ts` |
+| Types | `PascalCase` | `QuoteResult` |
+| Zod schemas | `camelCase` + `Schema` | `tripDetailsSchema` |
+| Booleans | `is` / `can` / `has` | `isVisible`, `canContinue` |
+| Handlers | `on*` / `handle*` | `onConfirmBooking` |
+
+Prefer feature prefixes when names collide (`BookingSummary` vs `MarketingHero`). Do not put kit or repo names in identifiers.

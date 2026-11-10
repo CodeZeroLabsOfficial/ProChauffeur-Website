@@ -1,0 +1,28 @@
+---
+description: iOS v2 booking flow is the behavior and wire-contract source of truth
+alwaysApply: true
+---
+
+# Booking parity
+
+Customer booking on this site must match the product outcomes of the live iOS v2 booking flow.
+
+## Flow order
+
+1. **Fare estimate** — pickup, drop-off, vehicle class, add-ons, live quote
+2. **Trip details** — one-way / return, schedule, passengers, luggage
+3. **Payment** — card / Apple Pay / saved methods / corporate when linked
+4. **Summary** — review, then confirm
+
+Do not invent a parallel funnel (e.g. hotel check-in as the whole product). Marketing hero may **seed** estimate fields only.
+
+## Contracts
+
+- Same eligibility: enabled, visible, transfer support, capacity.
+- Same nouns and wire fields: trip, quote snapshot, `vehicleClassId`, `addonIds`, `scheduledPickupAt`.
+- Same disclaimer intent: amounts are estimates until booking confirms.
+- Adapt layout for web; do not change fare, trip, or payment outcomes.
+
+## Guest vs app
+
+Anonymous quote is allowed. Email create-account / sign-in is required before confirm / pay. That is the only intentional auth difference from a signed-in mobile session.

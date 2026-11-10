@@ -1,0 +1,23 @@
+---
+description: Sparse comments and standard TypeScript/React coding structure
+alwaysApply: true
+---
+
+# Code style and comments
+
+## Comments
+
+- Default: **no comments**.
+- Comment only for wire contracts, auth/booking gates, invariants, or non-obvious side effects.
+- No narrating code, commented-out dead code, or kit/site/brand references.
+- Short JSDoc on exports only when the name is not enough.
+
+## Code
+
+- Thin `page.tsx` — logic in `lib/` or `components/booking|marketing`.
+- One primary export per feature file; helpers stay private in-file.
+- Import order: external → `@/` → relative; use `import type` for types.
+- `"use client"` only when required.
+- One booking state model; do not re-declare journey fields in every step.
+- Fail at boundaries (env, quote, pay); do not swallow errors.
+- Prettier + ESLint; no dual or legacy paths in this greenfield app.

@@ -1,0 +1,11 @@
+---
+description: Do not reference other projects, kits, or external sites/brands in code or comments
+alwaysApply: true
+---
+
+# No cross-project or example-site references
+
+- Do not mention other repositories, apps, design kits, or sibling folders in source code or comments.
+- Do not name external websites, products, or brands as examples in source code or comments (e.g. travel, lodging, or rideshare sites). Describe behavior in product terms only (“integrated hero booking strip”, “fare estimate step”).
+- Schema and model comments describe the Firestore/RTDB contract only (collection paths, field names).
+- Do not add comments like “mirrors X”, “from Y kit”, “like Z product”, or “Airbnb-style”.
