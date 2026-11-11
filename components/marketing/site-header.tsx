@@ -1,23 +1,16 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { Menu } from "lucide-react";
 import Link from "next/link";
 
 import { BrandMark } from "@/components/marketing/brand-mark";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTitle,
-  DrawerTrigger
-} from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Services", href: "/#services" },
   { label: "Fleet", href: "/#fleet" },
+  { label: "Business", href: "/business" },
   { label: "Contact", href: "/contact" }
 ] as const;
 
@@ -73,7 +66,6 @@ export function SiteHeader({
     const update = () => {
       const hero = document.getElementById("hero");
       if (hero) {
-        // Solid until the hero bottom reaches the sticky nav (h-16).
         setIsGlass(hero.getBoundingClientRect().bottom <= 64);
         return;
       }
@@ -89,86 +81,110 @@ export function SiteHeader({
     };
   }, [scrollGlass]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen]);
+
   return (
-    <nav
+    <header
       className={cn(
-        "sticky top-0 z-50 flex h-16 w-full items-center gap-3 border-b px-4 text-white transition-[background-color,backdrop-filter,border-color] duration-300 lg:px-6",
-        isGlass
-          ? "border-white/10 bg-neutral-950/85 backdrop-blur-md"
-          : "border-white/10 bg-neutral-950 backdrop-blur-none",
+        "sticky top-0 z-50 w-full border-b text-white transition-[background-color,backdrop-filter,border-color] duration-300",
+        isOpen || !isGlass
+          ? "border-white/10 bg-neutral-950 backdrop-blur-none"
+          : "border-white/10 bg-neutral-950/85 backdrop-blur-md",
         className
       )}>
-      <BrandMark className="relative z-10" priority />
+      <nav className="relative z-20 flex h-16 w-full items-center gap-3 px-4 lg:px-6">
+        <BrandMark className="relative z-10" priority />
 
-      {hasCenter ? (
-        <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center px-4 sm:px-6">
-          <div className="pointer-events-auto min-w-0 max-w-full">{center}</div>
-        </div>
-      ) : (
-        <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
-            <Link key={link.label} href={link.href} className={navLinkClassName}>
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      )}
+        {hasCenter ? (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-0 flex h-16 items-center justify-center px-4 sm:px-6">
+            <div className="pointer-events-auto min-w-0 max-w-full">{center}</div>
+          </div>
+        ) : (
+          <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
+            {NAV_LINKS.map((link) => (
+              <Link key={link.label} href={link.href} className={navLinkClassName}>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        )}
 
-      {(showSignIn || !hasCenter) && (
-        <div className="flex shrink-0 items-center justify-end gap-2">
-          {showSignIn ? (
-            <Link href="/booking" className={cn(navLinkClassName, "hidden md:inline-flex")}>
-              Sign in
-              <SignInIcon />
-            </Link>
-          ) : null}
+        {(showSignIn || !hasCenter) && (
+          <div className="relative z-10 ml-auto flex shrink-0 items-center justify-end gap-2">
+            {showSignIn ? (
+              <Link href="/booking" className={cn(navLinkClassName, "hidden md:inline-flex")}>
+                Sign in
+                <SignInIcon />
+              </Link>
+            ) : null}
 
-          {!hasCenter ? (
-            <Drawer
-              swipeDirection="right"
-              open={isOpen}
-              onOpenChange={(open) => setIsOpen(open)}>
-              <DrawerTrigger
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "icon" }),
-                  "text-white hover:bg-white/10 hover:text-white md:hidden"
-                )}>
-                <Menu />
-                <span className="sr-only">Toggle menu</span>
-              </DrawerTrigger>
-              <DrawerContent className="flex flex-col border-neutral-800 bg-neutral-950 p-6 text-white">
-                <DrawerTitle className="sr-only">Menu</DrawerTitle>
-                <BrandMark />
-                <div className="flex grow flex-col">
-                  {NAV_LINKS.map((link) => (
-                    <Link
-                      key={link.label}
-                      href={link.href}
-                      className="py-2 font-medium text-white"
-                      onClick={() => setIsOpen(false)}>
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-                {showSignIn ? (
-                  <Link
-                    href="/booking"
-                    className={cn(navLinkClassName, "py-2")}
-                    onClick={() => setIsOpen(false)}>
-                    Sign in
-                    <SignInIcon />
-                  </Link>
-                ) : null}
-              </DrawerContent>
-            </Drawer>
-          ) : showSignIn ? (
-            <Link href="/booking" className={cn(navLinkClassName, "md:hidden")}>
-              Sign in
-              <SignInIcon />
-            </Link>
-          ) : null}
+            {!hasCenter ? (
+              <button
+                type="button"
+                className="flex size-10 items-center justify-center md:hidden"
+                aria-expanded={isOpen}
+                aria-controls="mobile-nav-menu"
+                aria-label={isOpen ? "Close menu" : "Open menu"}
+                onClick={() => setIsOpen((open) => !open)}>
+                <span className="relative block h-10 w-8" aria-hidden>
+                  <span
+                    className={cn(
+                      "absolute top-1/2 left-1/2 h-[1.5px] w-5 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                      isOpen
+                        ? "-translate-x-1/2 -translate-y-1/2 rotate-45"
+                        : "-translate-x-1/2 -translate-y-[4.5px]"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "absolute top-1/2 left-1/2 h-[1.5px] w-5 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                      isOpen
+                        ? "-translate-x-1/2 -translate-y-1/2 -rotate-45"
+                        : "-translate-x-1/2 translate-y-[3px]"
+                    )}
+                  />
+                </span>
+              </button>
+            ) : showSignIn ? (
+              <Link href="/booking" className={cn(navLinkClassName, "md:hidden")}>
+                Sign in
+                <SignInIcon />
+              </Link>
+            ) : null}
+          </div>
+        )}
+      </nav>
+
+      {!hasCenter ? (
+        <div
+          id="mobile-nav-menu"
+          className={cn(
+            "absolute inset-x-0 top-full z-10 grid border-b border-white/10 bg-neutral-950 md:hidden",
+            "transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr] border-transparent"
+          )}>
+          <div className="overflow-hidden">
+            <div className="flex flex-col gap-1 px-4 pt-4 pb-8">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                  onClick={() => setIsOpen(false)}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
-      )}
-    </nav>
+      ) : null}
+    </header>
   );
 }

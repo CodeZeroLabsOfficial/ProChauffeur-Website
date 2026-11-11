@@ -57,9 +57,9 @@ export function MarketingInclusions() {
   }
 
   return (
-    <section className="flex h-[100svh] scroll-mt-16 flex-col justify-center bg-neutral-950 px-4 py-6 text-white sm:px-6">
-      <div className="mx-auto flex max-h-full w-full max-w-6xl flex-col">
-        <header className="mx-auto mb-12 max-w-xl shrink-0 space-y-1.5 text-center">
+    <section className="scroll-mt-16 bg-neutral-950 px-4 py-14 text-white sm:px-6 sm:py-20 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col lg:max-h-full">
+        <header className="mx-auto mb-8 max-w-xl shrink-0 space-y-1.5 text-center lg:mb-12">
           <h2 className="font-heading text-2xl leading-tight tracking-tight text-balance sm:text-3xl">
             Included in every ride.
           </h2>
@@ -68,8 +68,8 @@ export function MarketingInclusions() {
           </p>
         </header>
 
-        <div className="grid min-h-0 gap-5 lg:grid-cols-2 lg:items-stretch lg:gap-8">
-          <div className="grid h-full min-h-0 grid-rows-4 divide-y divide-white/10">
+        <div className="grid min-h-0 gap-8 lg:grid-cols-2 lg:items-stretch lg:gap-8">
+          <div className="grid divide-y divide-white/10 lg:h-full lg:min-h-0 lg:grid-rows-4">
             {INCLUSIONS.map((item, index) => {
               const Icon = item.icon;
               const isActive = index === activeIndex;
@@ -79,7 +79,7 @@ export function MarketingInclusions() {
                   key={item.id}
                   type="button"
                   onClick={() => select(index)}
-                  className="relative flex min-h-0 w-full cursor-pointer flex-col justify-center gap-1.5 px-3 py-3.5 text-left transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 sm:gap-2 sm:px-4 sm:py-4">
+                  className="relative flex w-full cursor-pointer flex-col justify-center gap-1.5 px-3 py-3.5 text-left transition-colors duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950 sm:gap-2 sm:px-4 sm:py-4 lg:min-h-0">
                   <div className="flex items-center gap-3">
                     <span
                       className={cn(
@@ -112,7 +112,7 @@ export function MarketingInclusions() {
             })}
           </div>
 
-          <figure className="relative hidden min-h-0 overflow-hidden rounded-lg lg:block lg:h-full">
+          <figure className="relative aspect-square max-h-[36svh] w-full overflow-hidden rounded-lg lg:aspect-auto lg:max-h-none lg:h-full">
             {INCLUSIONS.map((item, index) => (
               <Image
                 key={item.id}
@@ -123,7 +123,7 @@ export function MarketingInclusions() {
                   "object-cover object-center transition-opacity duration-500",
                   index === activeIndex ? "opacity-100" : "opacity-0"
                 )}
-                sizes="40vw"
+                sizes="(min-width: 1024px) 40vw, 90vw"
               />
             ))}
           </figure>

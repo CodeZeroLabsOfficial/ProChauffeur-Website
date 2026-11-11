@@ -83,14 +83,14 @@ function ServiceCard({ service }: { service: Service }) {
       />
 
       <div
-        className="absolute inset-x-0 bottom-0 z-[1] translate-y-[var(--service-hide-y)] px-4 pt-6 pb-4 pr-14 text-white transition-transform duration-[400ms] ease-out group-hover:translate-y-0 sm:px-5 sm:pb-5 sm:pr-16"
+        className="absolute inset-x-0 bottom-0 z-[1] translate-y-0 px-4 pt-6 pb-4 pr-14 text-white transition-transform duration-[400ms] ease-out sm:px-5 sm:pb-5 sm:pr-16 lg:translate-y-[var(--service-hide-y)] lg:group-hover:translate-y-0"
         style={{ ["--service-hide-y" as string]: `${hideY}px` }}>
         <h3 className="text-base leading-snug font-medium tracking-tight sm:text-lg">
           {service.title}
         </h3>
         <p
           ref={descriptionRef}
-          className="mt-2 max-w-[80%] text-sm leading-relaxed text-white/85 opacity-0 transition-opacity duration-[400ms] group-hover:opacity-100">
+          className="mt-2 max-w-[80%] text-sm leading-relaxed text-white/85 opacity-100 transition-opacity duration-[400ms] lg:opacity-0 lg:group-hover:opacity-100">
           {service.description}
         </p>
       </div>
@@ -142,9 +142,9 @@ export function MarketingServices() {
   return (
     <section
       id="services"
-      className="bg-background flex h-[100svh] scroll-mt-16 flex-col justify-center px-4 py-6 sm:px-6">
+      className="bg-background scroll-mt-16 px-4 py-14 sm:px-6 sm:py-20 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-6">
       <div className="mx-auto flex w-full max-w-6xl flex-col">
-        <header className="mb-12 max-w-xl shrink-0 space-y-3">
+        <header className="mb-8 max-w-xl shrink-0 space-y-3 lg:mb-12">
           <h2 className="font-heading text-3xl tracking-tight text-balance sm:text-4xl">
             Travel that fits the day.
           </h2>
@@ -155,18 +155,18 @@ export function MarketingServices() {
 
         <ul
           ref={trackRef}
-          className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          className="flex flex-col gap-5 lg:snap-x lg:snap-mandatory lg:flex-row lg:overflow-x-auto lg:scroll-smooth lg:[-ms-overflow-style:none] lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
           {SERVICES.map((service) => (
             <li
               key={service.id}
               data-service-card
-              className="w-[min(85%,20rem)] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)]">
+              className="w-full lg:w-[calc((100%-2.5rem)/3)] lg:shrink-0 lg:snap-start">
               <ServiceCard service={service} />
             </li>
           ))}
         </ul>
 
-        <div className="mt-4 flex h-8 shrink-0 items-center justify-center gap-1">
+        <div className="mt-4 hidden h-8 shrink-0 items-center justify-center gap-1 lg:flex">
           {showControls ? (
             <>
               <Button

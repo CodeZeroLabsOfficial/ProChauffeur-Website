@@ -63,10 +63,23 @@ export function MarketingFleet() {
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isCarousel, setIsCarousel] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setIsCarousel(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     const track = trackRef.current;
-    if (!track) return;
+    if (!track || !isCarousel) {
+      setCanScrollPrev(false);
+      setCanScrollNext(false);
+      return;
+    }
 
     const update = () => {
       const maxScroll = track.scrollWidth - track.clientWidth;
@@ -82,7 +95,7 @@ export function MarketingFleet() {
       track.removeEventListener("scroll", update);
       observer.disconnect();
     };
-  }, []);
+  }, [isCarousel]);
 
   function scrollByPage(direction: -1 | 1) {
     const track = trackRef.current;
@@ -104,7 +117,7 @@ export function MarketingFleet() {
   }
 
   useEffect(() => {
-    if (isPaused) return;
+    if (!isCarousel || isPaused) return;
 
     const id = window.setInterval(() => {
       const track = trackRef.current;
@@ -120,14 +133,14 @@ export function MarketingFleet() {
     }, CYCLE_MS);
 
     return () => window.clearInterval(id);
-  }, [isPaused]);
+  }, [isCarousel, isPaused]);
 
-  const showControls = canScrollPrev || canScrollNext;
+  const showControls = isCarousel && (canScrollPrev || canScrollNext);
 
   return (
     <section
       id="fleet"
-      className="flex h-[100svh] scroll-mt-16 flex-col justify-center px-4 py-6 sm:px-6"
+      className="scroll-mt-16 px-4 py-14 sm:px-6 sm:py-20 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-6"
       style={{ backgroundColor: "#F2F2F2" }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -138,7 +151,7 @@ export function MarketingFleet() {
         }
       }}>
       <div className="mx-auto flex w-full max-w-6xl flex-col">
-        <header className="mb-12 max-w-xl shrink-0 space-y-3">
+        <header className="mb-8 max-w-xl shrink-0 space-y-3 lg:mb-12">
           <h2 className="font-heading text-3xl tracking-tight text-balance text-neutral-950 sm:text-4xl">
             Our Luxury Fleet
           </h2>
@@ -149,19 +162,19 @@ export function MarketingFleet() {
 
         <ul
           ref={trackRef}
-          className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          className="flex flex-col gap-5 lg:snap-x lg:snap-mandatory lg:flex-row lg:overflow-x-auto lg:scroll-smooth lg:[-ms-overflow-style:none] lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
           {FLEET.map((vehicle) => (
             <li
               key={vehicle.id}
               data-fleet-card
-              className="w-[min(85%,20rem)] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)]">
-              <article className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-200">
+              className="w-full lg:w-[calc((100%-2.5rem)/3)] lg:shrink-0 lg:snap-start">
+              <article className="relative aspect-[5/6] overflow-hidden rounded-2xl bg-neutral-200 lg:aspect-[3/4]">
                 <Image
                   src={vehicle.image}
                   alt={`${vehicle.make} ${vehicle.model}`}
                   fill
                   className="object-cover object-[center_70%]"
-                  sizes="(min-width: 640px) 33vw, 85vw"
+                  sizes="(min-width: 1024px) 33vw, 90vw"
                 />
                 <div className="absolute inset-x-0 bottom-0 border-t border-white/20 bg-neutral-950/45 px-4 py-3 text-white backdrop-blur-md">
                   <p className="text-sm font-medium tracking-tight sm:text-base">
@@ -176,12 +189,14 @@ export function MarketingFleet() {
                     <span className="inline-flex items-center gap-1.5">
                       <Briefcase className="size-3.5" aria-hidden />
                       <span className="sr-only">Small luggage</span>
-                      {vehicle.luggageSmall} small
+                      {vehicle.luggageSmall}
+                      <span className="hidden lg:inline"> small</span>
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <Briefcase className="size-3.5" aria-hidden />
                       <span className="sr-only">Large luggage</span>
-                      {vehicle.luggageLarge} large
+                      {vehicle.luggageLarge}
+                      <span className="hidden lg:inline"> large</span>
                     </span>
                   </div>
                 </div>
@@ -190,7 +205,7 @@ export function MarketingFleet() {
           ))}
         </ul>
 
-        <div className="mt-4 flex h-8 shrink-0 items-center justify-center gap-1">
+        <div className="mt-4 hidden h-8 shrink-0 items-center justify-center gap-1 lg:flex">
           {showControls ? (
             <>
               <Button
