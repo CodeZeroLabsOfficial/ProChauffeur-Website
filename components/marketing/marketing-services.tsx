@@ -5,10 +5,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-const GAP_PX = 24;
+const GAP_PX = 20;
 
 const SERVICES = [
   {
@@ -36,12 +35,12 @@ const SERVICES = [
     href: "/booking?tripType=hourly"
   },
   {
-    id: "return-trips",
-    title: "Return Trips",
+    id: "corporate-transfers",
+    title: "Corporate Transfers",
     description:
-      "Outbound and return in a single booking, so the way home is already sorted.",
-    image: "/services/service-return-trips.jpg",
-    href: "/booking?tripType=transfer&itinerary=return"
+      "Corporate accounts for executive travel, client pickups, and simplified billing across your team.",
+    image: "/services/service-corporate-transfers.jpg",
+    href: "/business"
   }
 ] as const;
 
@@ -81,76 +80,81 @@ export function MarketingServices() {
   const showControls = canScrollPrev || canScrollNext;
 
   return (
-    <section id="services" className="bg-background scroll-mt-20 px-4 py-20 sm:px-6 sm:py-28">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 max-w-2xl space-y-3">
-          <h2 className="font-heading text-3xl tracking-tight text-balance sm:text-4xl">
+    <section
+      id="services"
+      className="bg-background flex h-[100svh] scroll-mt-16 flex-col justify-center px-4 py-6 sm:px-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col">
+        <header className="mb-5 max-w-2xl shrink-0 space-y-2">
+          <h2 className="font-heading text-2xl tracking-tight text-balance sm:text-3xl">
             Travel that fits the day.
           </h2>
-          <p className="text-muted-foreground text-base text-balance sm:text-lg">
-            Airport, city, or by the hour—start with a live fare estimate.
+          <p className="text-muted-foreground text-sm text-balance sm:text-base">
+            Airport, city, or by the hour—your journey starts here.
           </p>
         </header>
 
         <ul
           ref={trackRef}
-          className="flex snap-x snap-mandatory gap-6 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {SERVICES.map((service) => (
             <li
               key={service.id}
               data-service-card
-              className="w-[min(85%,22rem)] shrink-0 snap-start sm:w-[calc((100%-3rem)/2.5)]">
-              <article className="flex h-full flex-col gap-4">
-                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border-0">
-                  <Image
-                    src={service.image}
-                    alt=""
-                    fill
-                    className="object-cover object-center"
-                    sizes="(min-width: 640px) 40vw, 85vw"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col gap-2">
-                  <h3 className="text-lg font-medium tracking-tight">{service.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed text-balance sm:text-base">
+              className="w-[min(85%,20rem)] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)]">
+              <Link
+                href={service.href}
+                className="group relative block aspect-[4/5] max-h-[calc(100svh-12rem)] w-full overflow-hidden rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2">
+                <Image
+                  src={service.image}
+                  alt=""
+                  fill
+                  className="object-cover object-center transition-transform duration-[400ms] group-hover:scale-[1.07]"
+                  sizes="(min-width: 640px) 33vw, 85vw"
+                />
+
+                <div className="absolute inset-x-0 bottom-0 z-[1] translate-y-[calc(100%-4.75rem)] bg-gradient-to-t from-black/90 to-transparent px-4 pt-20 pb-4 pr-14 text-white transition-transform duration-[400ms] ease-out group-hover:translate-y-0 sm:translate-y-[calc(100%-5.25rem)] sm:px-5 sm:pt-24 sm:pb-5 sm:pr-16">
+                  <h3 className="truncate text-base leading-snug font-medium tracking-tight sm:text-lg">
+                    {service.title}
+                  </h3>
+                  <p className="mt-2 max-w-[80%] text-sm leading-relaxed text-white/85">
                     {service.description}
                   </p>
-                  <Link
-                    href={service.href}
-                    className={cn(
-                      buttonVariants({ variant: "outline", size: "lg" }),
-                      "mt-auto h-11 w-fit rounded-full px-6"
-                    )}>
-                    Get estimate
-                  </Link>
                 </div>
-              </article>
+
+                <span
+                  aria-hidden
+                  className="absolute right-4 bottom-4 z-[2] grid size-9 place-items-center rounded-lg bg-white text-neutral-950 transition-colors duration-[400ms] group-hover:bg-white/90 sm:right-5 sm:bottom-5">
+                  <ChevronRight className="size-4" />
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
 
-        {showControls ? (
-          <div className="mt-6 flex justify-center gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Previous services"
-              disabled={!canScrollPrev}
-              onClick={() => scrollByPage(-1)}>
-              <ChevronLeft />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              aria-label="Next services"
-              disabled={!canScrollNext}
-              onClick={() => scrollByPage(1)}>
-              <ChevronRight />
-            </Button>
-          </div>
-        ) : null}
+        <div className="mt-4 flex h-8 shrink-0 items-center justify-center gap-1">
+          {showControls ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Previous services"
+                disabled={!canScrollPrev}
+                onClick={() => scrollByPage(-1)}>
+                <ChevronLeft />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                aria-label="Next services"
+                disabled={!canScrollNext}
+                onClick={() => scrollByPage(1)}>
+                <ChevronRight />
+              </Button>
+            </>
+          ) : null}
+        </div>
       </div>
     </section>
   );
