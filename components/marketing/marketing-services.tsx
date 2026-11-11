@@ -16,8 +16,7 @@ const SERVICES = [
     title: "Airport Transfers",
     description:
       "Flight-aware pickup, meet-and-greet when you land, and a clear path from terminal to destination.",
-    image:
-      "https://images.unsplash.com/photo-1544620341-9adcbc300ad0?q=80&w=1200&auto=format&fit=crop",
+    image: "/services/service-airport-transfers.jpg",
     href: "/booking?tripType=transfer"
   },
   {
@@ -25,8 +24,7 @@ const SERVICES = [
     title: "Point-to-Point",
     description:
       "Door-to-door across town with a set pickup time and a fare you see before you ride.",
-    image:
-      "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=1200&auto=format&fit=crop",
+    image: "/services/service-point-to-point.jpg",
     href: "/booking?tripType=transfer"
   },
   {
@@ -34,8 +32,7 @@ const SERVICES = [
     title: "Hourly Charter",
     description:
       "One chauffeur for the afternoon—meetings, stops, and the spaces in between.",
-    image:
-      "https://images.unsplash.com/photo-1485291571150-772bcfc10da5?q=80&w=1200&auto=format&fit=crop",
+    image: "/services/service-hourly-charter.jpg",
     href: "/booking?tripType=hourly"
   },
   {
@@ -43,8 +40,7 @@ const SERVICES = [
     title: "Return Trips",
     description:
       "Outbound and return in a single booking, so the way home is already sorted.",
-    image:
-      "https://images.unsplash.com/photo-1511919884226-fd3cad54643b?q=80&w=1200&auto=format&fit=crop",
+    image: "/services/service-return-trips.jpg",
     href: "/booking?tripType=transfer&itinerary=return"
   }
 ] as const;
@@ -105,7 +101,7 @@ export function MarketingServices() {
               data-service-card
               className="w-[min(85%,22rem)] shrink-0 snap-start sm:w-[calc((100%-3rem)/2.5)]">
               <article className="flex h-full flex-col gap-4">
-                <div className="bg-muted relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
+                <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border-0">
                   <Image
                     src={service.image}
                     alt=""
@@ -122,10 +118,10 @@ export function MarketingServices() {
                   <Link
                     href={service.href}
                     className={cn(
-                      buttonVariants({ variant: "outline", size: "sm" }),
-                      "mt-auto w-fit"
+                      buttonVariants({ variant: "outline", size: "lg" }),
+                      "mt-auto h-11 w-fit rounded-full px-6"
                     )}>
-                    Get Estimate
+                    Get estimate
                   </Link>
                 </div>
               </article>

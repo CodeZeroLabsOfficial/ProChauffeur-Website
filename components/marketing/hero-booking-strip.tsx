@@ -314,7 +314,7 @@ export function HeroBookingStrip() {
             <Button
               type="submit"
               size="lg"
-              className="h-11 w-full bg-white px-6 text-neutral-950 hover:bg-white/90 sm:w-auto">
+              className="h-11 w-full rounded-full bg-white px-6 text-neutral-950 hover:bg-white/90 sm:w-auto">
               Get estimate
             </Button>
           </div>
