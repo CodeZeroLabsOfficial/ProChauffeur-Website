@@ -12,8 +12,8 @@ export default function HomePage() {
       <SiteHeader />
       <MarketingHero />
       <MarketingServices />
-      <MarketingFleet />
       <MarketingInclusions />
+      <MarketingFleet />
       <MarketingCta />
       <SiteFooter />
     </>

@@ -160,7 +160,7 @@ export function MarketingFleet() {
                   src={vehicle.image}
                   alt={`${vehicle.make} ${vehicle.model}`}
                   fill
-                  className="object-cover object-center"
+                  className="object-cover object-[center_70%]"
                   sizes="(min-width: 640px) 33vw, 85vw"
                 />
                 <div className="absolute inset-x-0 bottom-0 border-t border-white/20 bg-neutral-950/45 px-4 py-3 text-white backdrop-blur-md">
