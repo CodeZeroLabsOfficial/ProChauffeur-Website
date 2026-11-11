@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -44,6 +44,66 @@ const SERVICES = [
   }
 ] as const;
 
+type Service = (typeof SERVICES)[number];
+
+function ServiceCard({ service }: { service: Service }) {
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const [hideY, setHideY] = useState(160);
+
+  useLayoutEffect(() => {
+    const node = descriptionRef.current;
+    if (!node) return;
+
+    const update = () => {
+      const marginTop = Number.parseFloat(getComputedStyle(node).marginTop) || 0;
+      setHideY(node.offsetHeight + marginTop);
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [service.description]);
+
+  return (
+    <Link
+      href={service.href}
+      className="group relative block aspect-[4/5] max-h-[calc(100svh-12rem)] w-full overflow-hidden rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2">
+      <Image
+        src={service.image}
+        alt=""
+        fill
+        className="object-cover object-center transition-transform duration-[400ms] group-hover:scale-[1.07]"
+        sizes="(min-width: 640px) 33vw, 85vw"
+      />
+
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-2/5 bg-gradient-to-t from-black/90 to-transparent"
+      />
+
+      <div
+        className="absolute inset-x-0 bottom-0 z-[1] translate-y-[var(--service-hide-y)] px-4 pt-16 pb-4 pr-14 text-white transition-transform duration-[400ms] ease-out group-hover:translate-y-0 sm:px-5 sm:pb-5 sm:pr-16"
+        style={{ ["--service-hide-y" as string]: `${hideY}px` }}>
+        <h3 className="text-base leading-snug font-medium tracking-tight sm:text-lg">
+          {service.title}
+        </h3>
+        <p
+          ref={descriptionRef}
+          className="mt-2 max-w-[80%] text-sm leading-relaxed text-white/85 opacity-0 transition-opacity duration-[400ms] group-hover:opacity-100">
+          {service.description}
+        </p>
+      </div>
+
+      <span
+        aria-hidden
+        className="absolute right-4 bottom-4 z-[2] grid size-9 place-items-center rounded-lg bg-white text-neutral-950 transition-colors duration-[400ms] group-hover:bg-white/90 sm:right-5 sm:bottom-5">
+        <ChevronRight className="size-4" />
+      </span>
+    </Link>
+  );
+}
+
 export function MarketingServices() {
   const trackRef = useRef<HTMLUListElement>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
@@ -84,11 +144,11 @@ export function MarketingServices() {
       id="services"
       className="bg-background flex h-[100svh] scroll-mt-16 flex-col justify-center px-4 py-6 sm:px-6">
       <div className="mx-auto flex w-full max-w-6xl flex-col">
-        <header className="mb-5 max-w-2xl shrink-0 space-y-2">
-          <h2 className="font-heading text-2xl tracking-tight text-balance sm:text-3xl">
+        <header className="mb-6 max-w-xl shrink-0 space-y-3">
+          <h2 className="font-heading text-3xl tracking-tight text-balance sm:text-4xl">
             Travel that fits the day.
           </h2>
-          <p className="text-muted-foreground text-sm text-balance sm:text-base">
+          <p className="text-muted-foreground text-base text-balance sm:text-lg">
             Airport, city, or by the hour—your journey starts here.
           </p>
         </header>
@@ -101,32 +161,7 @@ export function MarketingServices() {
               key={service.id}
               data-service-card
               className="w-[min(85%,20rem)] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)]">
-              <Link
-                href={service.href}
-                className="group relative block aspect-[4/5] max-h-[calc(100svh-12rem)] w-full overflow-hidden rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2">
-                <Image
-                  src={service.image}
-                  alt=""
-                  fill
-                  className="object-cover object-center transition-transform duration-[400ms] group-hover:scale-[1.07]"
-                  sizes="(min-width: 640px) 33vw, 85vw"
-                />
-
-                <div className="absolute inset-x-0 bottom-0 z-[1] translate-y-[calc(100%-4.75rem)] bg-gradient-to-t from-black/90 to-transparent px-4 pt-20 pb-4 pr-14 text-white transition-transform duration-[400ms] ease-out group-hover:translate-y-0 sm:translate-y-[calc(100%-5.25rem)] sm:px-5 sm:pt-24 sm:pb-5 sm:pr-16">
-                  <h3 className="truncate text-base leading-snug font-medium tracking-tight sm:text-lg">
-                    {service.title}
-                  </h3>
-                  <p className="mt-2 max-w-[80%] text-sm leading-relaxed text-white/85">
-                    {service.description}
-                  </p>
-                </div>
-
-                <span
-                  aria-hidden
-                  className="absolute right-4 bottom-4 z-[2] grid size-9 place-items-center rounded-lg bg-white text-neutral-950 transition-colors duration-[400ms] group-hover:bg-white/90 sm:right-5 sm:bottom-5">
-                  <ChevronRight className="size-4" />
-                </span>
-              </Link>
+              <ServiceCard service={service} />
             </li>
           ))}
         </ul>
