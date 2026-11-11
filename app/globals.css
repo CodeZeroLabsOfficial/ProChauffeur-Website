@@ -188,5 +188,7 @@
 }
 
 @utility animate-inclusion-progress {
-  animation: inclusion-progress 5.5s linear both;
+  animation-name: inclusion-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }

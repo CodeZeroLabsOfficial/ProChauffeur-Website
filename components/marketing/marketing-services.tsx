@@ -40,7 +40,7 @@ const SERVICES = [
     description:
       "Corporate accounts for executive travel, client pickups, and simplified billing across your team.",
     image: "/services/service-corporate-transfers.jpg",
-    href: "/business"
+    href: "/booking?tripType=transfer"
   }
 ] as const;
 

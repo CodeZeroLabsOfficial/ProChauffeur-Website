@@ -49,7 +49,7 @@ export function MarketingInclusions() {
       setProgressKey((key) => key + 1);
     }, CYCLE_MS);
     return () => window.clearInterval(id);
-  }, [activeIndex]);
+  }, [progressKey]);
 
   function select(index: number) {
     setActiveIndex(index);
@@ -104,6 +104,7 @@ export function MarketingInclusions() {
                       key={progressKey}
                       aria-hidden
                       className="absolute bottom-0 left-0 h-0.5 animate-inclusion-progress bg-white"
+                      style={{ animationDuration: `${CYCLE_MS}ms` }}
                     />
                   ) : null}
                 </button>

@@ -2,9 +2,9 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
+import { BrandMark } from "@/components/marketing/brand-mark";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Drawer,
@@ -17,8 +17,7 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Services", href: "/#services" },
-  { label: "Fleet", href: "/fleet" },
-  { label: "Business", href: "/business" },
+  { label: "Fleet", href: "/#fleet" },
   { label: "Contact", href: "/contact" }
 ] as const;
 
@@ -43,24 +42,6 @@ function SignInIcon({ className }: { className?: string }) {
         />
       </svg>
     </span>
-  );
-}
-
-function Logo({ className }: { className?: string }) {
-  return (
-    <Link
-      href="/"
-      className={cn("flex shrink-0 items-center gap-2.5 text-white", className)}>
-      <Image
-        src="/logo.png"
-        alt=""
-        width={32}
-        height={32}
-        className="size-8 rounded-md object-cover"
-        priority
-      />
-      <span className="font-heading text-lg tracking-tight">Elite Chauffeurs</span>
-    </Link>
   );
 }
 
@@ -117,7 +98,7 @@ export function SiteHeader({
           : "border-white/10 bg-neutral-950 backdrop-blur-none",
         className
       )}>
-      <Logo className="relative z-10" />
+      <BrandMark className="relative z-10" priority />
 
       {hasCenter ? (
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center px-4 sm:px-6">
@@ -157,7 +138,7 @@ export function SiteHeader({
               </DrawerTrigger>
               <DrawerContent className="flex flex-col border-neutral-800 bg-neutral-950 p-6 text-white">
                 <DrawerTitle className="sr-only">Menu</DrawerTitle>
-                <Logo />
+                <BrandMark />
                 <div className="flex grow flex-col">
                   {NAV_LINKS.map((link) => (
                     <Link
