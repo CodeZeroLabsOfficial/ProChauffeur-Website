@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -69,16 +69,52 @@ type SiteHeaderProps = {
   /** Replaces marketing nav links (e.g. booking trip fields). */
   center?: ReactNode;
   showSignIn?: boolean;
+  /** Solid at top, glass after scroll. Disable on booking chrome. */
+  scrollGlass?: boolean;
 };
 
-export function SiteHeader({ className, center, showSignIn = true }: SiteHeaderProps) {
+export function SiteHeader({
+  className,
+  center,
+  showSignIn = true,
+  scrollGlass = true
+}: SiteHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isGlass, setIsGlass] = useState(false);
   const hasCenter = center != null;
+
+  useEffect(() => {
+    if (!scrollGlass) {
+      setIsGlass(false);
+      return;
+    }
+
+    const update = () => {
+      const hero = document.getElementById("hero");
+      if (hero) {
+        // Solid until the hero bottom reaches the sticky nav (h-16).
+        setIsGlass(hero.getBoundingClientRect().bottom <= 64);
+        return;
+      }
+      setIsGlass(window.scrollY > 24);
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [scrollGlass]);
 
   return (
     <nav
       className={cn(
-        "relative flex h-16 w-full items-center gap-3 border-b border-white/10 bg-neutral-950 px-4 text-white lg:px-6",
+        "sticky top-0 z-50 flex h-16 w-full items-center gap-3 border-b px-4 text-white transition-[background-color,backdrop-filter,border-color] duration-300 lg:px-6",
+        isGlass
+          ? "border-white/10 bg-neutral-950/85 backdrop-blur-md"
+          : "border-white/10 bg-neutral-950 backdrop-blur-none",
         className
       )}>
       <Logo className="relative z-10" />

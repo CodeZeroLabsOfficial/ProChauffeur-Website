@@ -73,12 +73,12 @@ export function BookingChrome({
 
   return (
     <div className="bg-background flex min-h-full flex-col">
-      <div className="bg-background sticky top-0 z-40">
-        <SiteHeader
-          showSignIn={false}
-          center={showTripStrip ? <EstimateTripFields /> : undefined}
-        />
-      </div>
+      <SiteHeader
+        showSignIn={false}
+        scrollGlass={false}
+        center={showTripStrip ? <EstimateTripFields /> : undefined}
+        className="bg-neutral-950"
+      />
 
       {!embedStepsInContent ? (
         <div className="border-border border-b">

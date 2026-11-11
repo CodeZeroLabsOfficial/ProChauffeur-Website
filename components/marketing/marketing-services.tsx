@@ -68,7 +68,7 @@ function ServiceCard({ service }: { service: Service }) {
   return (
     <Link
       href={service.href}
-      className="group relative block aspect-[4/5] max-h-[calc(100svh-12rem)] w-full overflow-hidden rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2">
+      className="group relative block aspect-[4/5] w-full overflow-hidden rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2">
       <Image
         src={service.image}
         alt=""
@@ -83,7 +83,7 @@ function ServiceCard({ service }: { service: Service }) {
       />
 
       <div
-        className="absolute inset-x-0 bottom-0 z-[1] translate-y-[var(--service-hide-y)] px-4 pt-16 pb-4 pr-14 text-white transition-transform duration-[400ms] ease-out group-hover:translate-y-0 sm:px-5 sm:pb-5 sm:pr-16"
+        className="absolute inset-x-0 bottom-0 z-[1] translate-y-[var(--service-hide-y)] px-4 pt-6 pb-4 pr-14 text-white transition-transform duration-[400ms] ease-out group-hover:translate-y-0 sm:px-5 sm:pb-5 sm:pr-16"
         style={{ ["--service-hide-y" as string]: `${hideY}px` }}>
         <h3 className="text-base leading-snug font-medium tracking-tight sm:text-lg">
           {service.title}
