@@ -142,8 +142,8 @@ export function MarketingServices() {
   return (
     <section
       id="services"
-      className="bg-background scroll-mt-16 px-4 py-14 sm:px-6 sm:py-20 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-6">
-      <div className="mx-auto flex w-full max-w-6xl flex-col">
+      className="bg-background flex min-h-[100svh] scroll-mt-16 flex-col px-4 py-14 sm:px-6 sm:py-20">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col">
         <header className="mb-8 max-w-xl shrink-0 space-y-3 lg:mb-12">
           <h2 className="font-heading text-3xl tracking-tight text-balance sm:text-4xl">
             Travel that fits the day.

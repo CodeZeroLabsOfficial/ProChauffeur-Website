@@ -57,18 +57,18 @@ export function MarketingInclusions() {
   }
 
   return (
-    <section className="scroll-mt-16 bg-neutral-950 px-4 py-14 text-white sm:px-6 sm:py-20 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-6">
-      <div className="mx-auto flex w-full max-w-6xl flex-col lg:max-h-full">
-        <header className="mx-auto mb-8 max-w-xl shrink-0 space-y-1.5 text-center lg:mb-12">
-          <h2 className="font-heading text-2xl leading-tight tracking-tight text-balance sm:text-3xl">
+    <section className="flex min-h-[100svh] scroll-mt-16 flex-col bg-neutral-950 px-4 py-14 text-white sm:px-6 sm:py-20">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col">
+        <header className="mx-auto mb-8 max-w-xl shrink-0 space-y-3 text-center lg:mb-12">
+          <h2 className="font-heading text-3xl tracking-tight text-balance sm:text-4xl">
             Included in every ride.
           </h2>
-          <p className="text-sm text-white/70 text-balance sm:text-base">
+          <p className="text-base text-white/70 text-balance sm:text-lg">
             The small details that make the journey feel considered.
           </p>
         </header>
 
-        <div className="grid min-h-0 gap-8 lg:grid-cols-2 lg:items-stretch lg:gap-8">
+        <div className="grid min-h-0 flex-1 gap-8 lg:grid-cols-2 lg:items-stretch lg:gap-8">
           <div className="grid divide-y divide-white/10 lg:h-full lg:min-h-0 lg:grid-rows-4">
             {INCLUSIONS.map((item, index) => {
               const Icon = item.icon;
@@ -112,7 +112,7 @@ export function MarketingInclusions() {
             })}
           </div>
 
-          <figure className="relative aspect-square max-h-[36svh] w-full overflow-hidden rounded-lg lg:aspect-auto lg:max-h-none lg:h-full">
+          <figure className="relative aspect-square max-h-[36svh] w-full overflow-hidden rounded-lg lg:aspect-auto lg:h-full lg:max-h-none lg:min-h-0">
             {INCLUSIONS.map((item, index) => (
               <Image
                 key={item.id}

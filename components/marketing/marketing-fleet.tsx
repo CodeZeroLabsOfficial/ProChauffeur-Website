@@ -140,7 +140,7 @@ export function MarketingFleet() {
   return (
     <section
       id="fleet"
-      className="scroll-mt-16 px-4 py-14 sm:px-6 sm:py-20 lg:flex lg:h-[100svh] lg:flex-col lg:justify-center lg:py-6"
+      className="flex min-h-[100svh] scroll-mt-16 flex-col px-4 py-14 sm:px-6 sm:py-20 lg:h-[100svh]"
       style={{ backgroundColor: "#F2F2F2" }}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
@@ -150,7 +150,7 @@ export function MarketingFleet() {
           setIsPaused(false);
         }
       }}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col">
+      <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
         <header className="mb-8 max-w-xl shrink-0 space-y-3 lg:mb-12">
           <h2 className="font-heading text-3xl tracking-tight text-balance text-neutral-950 sm:text-4xl">
             Our Luxury Fleet
@@ -162,13 +162,13 @@ export function MarketingFleet() {
 
         <ul
           ref={trackRef}
-          className="flex flex-col gap-5 lg:snap-x lg:snap-mandatory lg:flex-row lg:overflow-x-auto lg:scroll-smooth lg:[-ms-overflow-style:none] lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
+          className="flex min-h-0 flex-col gap-5 lg:flex-1 lg:snap-x lg:snap-mandatory lg:flex-row lg:overflow-x-auto lg:scroll-smooth lg:[-ms-overflow-style:none] lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
           {FLEET.map((vehicle) => (
             <li
               key={vehicle.id}
               data-fleet-card
-              className="w-full lg:w-[calc((100%-2.5rem)/3)] lg:shrink-0 lg:snap-start">
-              <article className="relative aspect-[5/6] overflow-hidden rounded-2xl bg-neutral-200 lg:aspect-[3/4]">
+              className="w-full lg:h-full lg:w-[calc((100%-2.5rem)/3)] lg:shrink-0 lg:snap-start">
+              <article className="relative aspect-[5/6] overflow-hidden rounded-2xl bg-neutral-200 lg:aspect-auto lg:h-full">
                 <Image
                   src={vehicle.image}
                   alt={`${vehicle.make} ${vehicle.model}`}

@@ -1,4 +1,3 @@
-import { MarketingCta } from "@/components/marketing/marketing-cta";
 import { MarketingFleet } from "@/components/marketing/marketing-fleet";
 import { MarketingHero } from "@/components/marketing/marketing-hero";
 import { MarketingInclusions } from "@/components/marketing/marketing-inclusions";
@@ -14,7 +13,6 @@ export default function HomePage() {
       <MarketingServices />
       <MarketingInclusions />
       <MarketingFleet />
-      <MarketingCta />
       <SiteFooter />
     </>
   );
