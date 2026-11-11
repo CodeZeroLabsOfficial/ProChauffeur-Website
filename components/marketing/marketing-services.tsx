@@ -144,7 +144,7 @@ export function MarketingServices() {
       id="services"
       className="bg-background flex h-[100svh] scroll-mt-16 flex-col justify-center px-4 py-6 sm:px-6">
       <div className="mx-auto flex w-full max-w-6xl flex-col">
-        <header className="mb-6 max-w-xl shrink-0 space-y-3">
+        <header className="mb-12 max-w-xl shrink-0 space-y-3">
           <h2 className="font-heading text-3xl tracking-tight text-balance sm:text-4xl">
             Travel that fits the day.
           </h2>

@@ -177,3 +177,16 @@
 @utility animate-hero-fields {
   animation: hero-fields-in 0.28s ease-out both;
 }
+
+@keyframes inclusion-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@utility animate-inclusion-progress {
+  animation: inclusion-progress 5.5s linear both;
+}
