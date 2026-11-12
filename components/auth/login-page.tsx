@@ -56,7 +56,7 @@ function LoginPageContent() {
 
 export function LoginPage() {
   return (
-    <div className="flex items-center justify-center px-4 py-4 lg:h-screen">
+    <div className="flex min-h-svh items-center justify-center px-4 py-4 lg:h-screen">
       <Suspense
         fallback={
           <p className="text-muted-foreground text-center text-sm">Loading…</p>
