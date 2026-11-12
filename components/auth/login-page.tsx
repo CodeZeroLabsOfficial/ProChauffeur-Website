@@ -8,8 +8,8 @@ import { LoginForm, type LoginFormMode } from "@/components/auth/login-form";
 import { useCustomerSession } from "@/lib/auth/use-customer-session";
 
 function safeRedirect(raw: string | null): string {
-  if (!raw) return "/dashboard/trips";
-  if (!raw.startsWith("/") || raw.startsWith("//")) return "/dashboard/trips";
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/";
   return raw;
 }
 
