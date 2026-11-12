@@ -10,18 +10,22 @@ alwaysApply: true
 ```text
 app/                 # App Router pages only
 components/
+  auth/              # sign-in dialog, account menu
   marketing/         # navbar, hero, features, CTA
   booking/           # fare estimate + wizard steps
+  dashboard/         # customer dashboard shell, tables, settings
   ui/                # design primitives only
 lib/
+  auth/              # customer session hooks
   models/            # wire-aligned types
   booking/           # flow, eligibility
+  dashboard/         # trips, invoices, saved cards
   firebase/
   mapbox/
   env.ts
 ```
 
-Keep marketing and booking code separate. Do not put domain logic in `page.tsx` files.
+Keep marketing, booking, and dashboard code separate. Do not put domain logic in `page.tsx` files.
 
 ## Domain glossary (wire vs UI)
 

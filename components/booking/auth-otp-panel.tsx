@@ -10,12 +10,21 @@ import {
   requestAuthOtp,
   verifyAuthOtpAndSignIn
 } from "@/lib/booking/auth-otp";
+import { cn } from "@/lib/utils";
 
 type AuthOtpPanelProps = {
   onVerified: () => void;
+  title?: string;
+  description?: string;
+  className?: string;
 };
 
-export function AuthOtpPanel({ onVerified }: AuthOtpPanelProps) {
+export function AuthOtpPanel({
+  onVerified,
+  title = "Sign in to continue",
+  description = "Enter your email to create an account or sign in before payment.",
+  className
+}: AuthOtpPanelProps) {
   const [email, setEmail] = useState("");
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -61,12 +70,10 @@ export function AuthOtpPanel({ onVerified }: AuthOtpPanelProps) {
   }
 
   return (
-    <div className="border-border space-y-4 border p-5">
+    <div className={cn("border-border space-y-4 border p-5", className)}>
       <div className="space-y-1">
-        <h2 className="text-lg font-medium">Sign in to continue</h2>
-        <p className="text-muted-foreground text-sm">
-          Enter your email to create an account or sign in before payment.
-        </p>
+        <h2 className="text-lg font-medium">{title}</h2>
+        <p className="text-muted-foreground text-sm">{description}</p>
       </div>
 
       <div className="space-y-2">

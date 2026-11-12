@@ -3,7 +3,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 
+import { AccountMenu } from "@/components/auth/account-menu";
+import { SignInDialog } from "@/components/auth/sign-in-dialog";
 import { BrandMark } from "@/components/marketing/brand-mark";
+import { useCustomerSession } from "@/lib/auth/use-customer-session";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -53,8 +56,10 @@ export function SiteHeader({
   showSignIn = true,
   scrollGlass = true
 }: SiteHeaderProps) {
+  const { ready, isCustomer, email } = useCustomerSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isGlass, setIsGlass] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
   const hasCenter = center != null;
 
   useEffect(() => {
@@ -90,101 +95,140 @@ export function SiteHeader({
     return () => window.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
+  const authControl =
+    showSignIn && ready ? (
+      isCustomer ? (
+        <AccountMenu email={email} />
+      ) : (
+        <button type="button" className={navLinkClassName} onClick={() => setSignInOpen(true)}>
+          Sign in
+          <SignInIcon />
+        </button>
+      )
+    ) : showSignIn ? (
+      <span className={cn(navLinkClassName, "opacity-50")}>Sign in</span>
+    ) : null;
+
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full border-b text-white transition-[background-color,backdrop-filter,border-color] duration-300",
-        isOpen || !isGlass
-          ? "border-white/10 bg-neutral-950 backdrop-blur-none"
-          : "border-white/10 bg-neutral-950/85 backdrop-blur-md",
-        className
-      )}>
-      <nav className="relative z-20 flex h-16 w-full items-center gap-3 px-4 lg:px-6">
-        <BrandMark className="relative z-10" priority />
+    <>
+      <header
+        className={cn(
+          "sticky top-0 z-50 w-full border-b text-white transition-[background-color,backdrop-filter,border-color] duration-300",
+          isOpen || !isGlass
+            ? "border-white/10 bg-neutral-950 backdrop-blur-none"
+            : "border-white/10 bg-neutral-950/85 backdrop-blur-md",
+          className
+        )}>
+        <nav className="relative z-20 flex h-16 w-full items-center gap-3 px-4 lg:px-6">
+          <BrandMark className="relative z-10" priority />
 
-        {hasCenter ? (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-0 flex h-16 items-center justify-center px-4 sm:px-6">
-            <div className="pointer-events-auto min-w-0 max-w-full">{center}</div>
-          </div>
-        ) : (
-          <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
-            {NAV_LINKS.map((link) => (
-              <Link key={link.label} href={link.href} className={navLinkClassName}>
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {(showSignIn || !hasCenter) && (
-          <div className="relative z-10 ml-auto flex shrink-0 items-center justify-end gap-2">
-            {showSignIn ? (
-              <Link href="/booking" className={cn(navLinkClassName, "hidden md:inline-flex")}>
-                Sign in
-                <SignInIcon />
-              </Link>
-            ) : null}
-
-            {!hasCenter ? (
-              <button
-                type="button"
-                className="flex size-10 items-center justify-center md:hidden"
-                aria-expanded={isOpen}
-                aria-controls="mobile-nav-menu"
-                aria-label={isOpen ? "Close menu" : "Open menu"}
-                onClick={() => setIsOpen((open) => !open)}>
-                <span className="relative block h-10 w-8" aria-hidden>
-                  <span
-                    className={cn(
-                      "absolute top-1/2 left-1/2 h-[1.5px] w-5 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                      isOpen
-                        ? "-translate-x-1/2 -translate-y-1/2 rotate-45"
-                        : "-translate-x-1/2 -translate-y-[4.5px]"
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      "absolute top-1/2 left-1/2 h-[1.5px] w-5 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                      isOpen
-                        ? "-translate-x-1/2 -translate-y-1/2 -rotate-45"
-                        : "-translate-x-1/2 translate-y-[3px]"
-                    )}
-                  />
-                </span>
-              </button>
-            ) : showSignIn ? (
-              <Link href="/booking" className={cn(navLinkClassName, "md:hidden")}>
-                Sign in
-                <SignInIcon />
-              </Link>
-            ) : null}
-          </div>
-        )}
-      </nav>
-
-      {!hasCenter ? (
-        <div
-          id="mobile-nav-menu"
-          className={cn(
-            "absolute inset-x-0 top-full z-10 grid border-b border-white/10 bg-neutral-950 md:hidden",
-            "transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-            isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr] border-transparent"
-          )}>
-          <div className="overflow-hidden">
-            <div className="flex flex-col gap-1 px-4 pt-4 pb-8">
+          {hasCenter ? (
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-0 flex h-16 items-center justify-center px-4 sm:px-6">
+              <div className="pointer-events-auto min-w-0 max-w-full">{center}</div>
+            </div>
+          ) : (
+            <div className="hidden flex-1 items-center justify-center gap-8 md:flex">
               {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
-                  onClick={() => setIsOpen(false)}>
+                <Link key={link.label} href={link.href} className={navLinkClassName}>
                   {link.label}
                 </Link>
               ))}
             </div>
+          )}
+
+          {(showSignIn || !hasCenter) && (
+            <div className="relative z-10 ml-auto flex shrink-0 items-center justify-end gap-2">
+              {showSignIn ? (
+                <div className="hidden md:inline-flex">{authControl}</div>
+              ) : null}
+
+              {!hasCenter ? (
+                <button
+                  type="button"
+                  className="flex size-10 items-center justify-center md:hidden"
+                  aria-expanded={isOpen}
+                  aria-controls="mobile-nav-menu"
+                  aria-label={isOpen ? "Close menu" : "Open menu"}
+                  onClick={() => setIsOpen((open) => !open)}>
+                  <span className="relative block h-10 w-8" aria-hidden>
+                    <span
+                      className={cn(
+                        "absolute top-1/2 left-1/2 h-[1.5px] w-5 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                        isOpen
+                          ? "-translate-x-1/2 -translate-y-1/2 rotate-45"
+                          : "-translate-x-1/2 -translate-y-[4.5px]"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "absolute top-1/2 left-1/2 h-[1.5px] w-5 bg-white transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                        isOpen
+                          ? "-translate-x-1/2 -translate-y-1/2 -rotate-45"
+                          : "-translate-x-1/2 translate-y-[3px]"
+                      )}
+                    />
+                  </span>
+                </button>
+              ) : showSignIn ? (
+                <div className="md:hidden">{authControl}</div>
+              ) : null}
+            </div>
+          )}
+        </nav>
+
+        {!hasCenter ? (
+          <div
+            id="mobile-nav-menu"
+            className={cn(
+              "absolute inset-x-0 top-full z-10 grid border-b border-white/10 bg-neutral-950 md:hidden",
+              "transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+              isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr] border-transparent"
+            )}>
+            <div className="overflow-hidden">
+              <div className="flex flex-col gap-1 px-4 pt-4 pb-8">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                    onClick={() => setIsOpen(false)}>
+                    {link.label}
+                  </Link>
+                ))}
+                {showSignIn && ready && !isCustomer ? (
+                  <button
+                    type="button"
+                    className="font-heading py-2 text-left text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                    onClick={() => {
+                      setIsOpen(false);
+                      setSignInOpen(true);
+                    }}>
+                    Sign in
+                  </button>
+                ) : null}
+                {showSignIn && ready && isCustomer ? (
+                  <>
+                    <Link
+                      href="/dashboard/trips"
+                      className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                      onClick={() => setIsOpen(false)}>
+                      My trips
+                    </Link>
+                    <Link
+                      href="/dashboard/settings/account"
+                      className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                      onClick={() => setIsOpen(false)}>
+                      Account Settings
+                    </Link>
+                  </>
+                ) : null}
+              </div>
+            </div>
           </div>
-        </div>
-      ) : null}
-    </header>
+        ) : null}
+      </header>
+
+      <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+    </>
   );
 }

@@ -74,7 +74,7 @@ export function BookingChrome({
   return (
     <div className="bg-background flex min-h-full flex-col">
       <SiteHeader
-        showSignIn={false}
+        showSignIn
         scrollGlass={false}
         center={showTripStrip ? <EstimateTripFields /> : undefined}
         className="bg-neutral-950"
