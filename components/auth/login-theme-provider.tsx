@@ -5,10 +5,10 @@ import { useEffect, type ReactNode } from "react";
 export function LoginThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
-    const hadDark = root.classList.contains("dark");
     root.classList.add("dark");
     return () => {
-      if (!hadDark) root.classList.remove("dark");
+      root.classList.remove("dark", "light");
+      root.style.colorScheme = "";
     };
   }, []);
 
