@@ -27,8 +27,7 @@ Routes under `/dashboard` use a sidebar shell (`components/dashboard/`). Email O
 
 | Area | Route | Data |
 |------|-------|------|
-| My Trips | `/dashboard/trips`, `/dashboard/trips/[tripId]` | Firestore collection group `trips` where `customerID == uid` |
-| My Billing | `/dashboard/billing` | Collection group `invoices` where `customerID == uid` |
+| My Trips | `/dashboard/trips`, `/dashboard/trips/[tripId]` | Firestore collection group `trips` where `customerID == uid`; receipt via `billing.stripeReceiptUrl` |
 | Account | `/dashboard/settings/account` | `users/{uid}` (read-only) |
 | Billing settings | `/dashboard/settings/billing` | `users/{uid}/payment_methods` + callable `manageSavedCards` |
 | Appearance | `/dashboard/settings/appearance` | Dashboard-only theme via `next-themes` |
@@ -57,7 +56,7 @@ Confirm uses `createTripCardPayment` (requires customer role). OTP verify provis
 - **Catalog** — `getBookingCatalog` returns sanitized branches, mapbox context, eligible vehicle classes, and add-ons (Admin SDK; filters enabled/visible/capacity/trip type)
 - **Quotes** — `buildTripQuote` (server fare math)
 - **Trips / payments** — same callables and document shapes as other clients (`journey.dropoff`, `scheduledPickupAt`, `vehicleClassId`, `addonIds` / `bookingAddons`, `capacity`)
-- **Dashboard history** — customer-owned trips and invoices via Firestore collection groups; saved cards via `manageSavedCards`
+- **Dashboard history** — customer-owned trips via Firestore collection group; Stripe receipt link on trip (`billing.stripeReceiptUrl` written by `stripeWebhook`); saved cards via `manageSavedCards`
 
 Location (UI) = `branchId` in code. Do not call staff portal HTTP APIs from this app.
 

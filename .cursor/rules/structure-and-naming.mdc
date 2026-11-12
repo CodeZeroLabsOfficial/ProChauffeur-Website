@@ -19,7 +19,7 @@ lib/
   auth/              # customer session hooks
   models/            # wire-aligned types
   booking/           # flow, eligibility
-  dashboard/         # trips, invoices, saved cards
+  dashboard/         # trips, saved cards
   firebase/
   mapbox/
   env.ts

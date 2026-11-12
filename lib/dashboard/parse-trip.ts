@@ -131,6 +131,8 @@ export function parseTrip(id: string, data: DocumentData, branchId?: string | nu
           : null,
       stripePaymentIntentId:
         typeof billing.stripePaymentIntentId === "string" ? billing.stripePaymentIntentId : null,
+      stripeReceiptUrl:
+        typeof billing.stripeReceiptUrl === "string" ? billing.stripeReceiptUrl : null,
       invoiceId: typeof billing.invoiceId === "string" ? billing.invoiceId : null,
       corporateAccountId:
         typeof billing.corporateAccountId === "string" ? billing.corporateAccountId : null,

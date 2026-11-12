@@ -45,6 +45,7 @@ export type TripQuote = {
 export type TripBilling = {
   paymentStatus?: PaymentStatus | null;
   stripePaymentIntentId?: string | null;
+  stripeReceiptUrl?: string | null;
   invoiceId?: string | null;
   corporateAccountId?: string | null;
   paidAt?: Date | null;

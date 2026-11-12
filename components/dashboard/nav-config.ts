@@ -1,4 +1,4 @@
-import { ReceiptIcon, RouteIcon, SettingsIcon, type LucideIcon } from "lucide-react";
+import { RouteIcon, SettingsIcon, type LucideIcon } from "lucide-react";
 
 export type DashboardNavItem = {
   title: string;
@@ -11,11 +11,6 @@ export const dashboardNavItems: DashboardNavItem[] = [
     title: "My Trips",
     href: "/dashboard/trips",
     icon: RouteIcon
-  },
-  {
-    title: "My Billing",
-    href: "/dashboard/billing",
-    icon: ReceiptIcon
   },
   {
     title: "Settings",

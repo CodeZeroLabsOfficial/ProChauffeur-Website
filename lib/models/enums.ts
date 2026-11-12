@@ -20,17 +20,6 @@ export const tripStatusTitle: Record<TripStatus, string> = {
   cancelled: "Cancelled"
 };
 
-export const INVOICE_STATUSES = ["draft", "sent", "paid", "void", "overdue"] as const;
-export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
-
-export const invoiceStatusTitle: Record<InvoiceStatus, string> = {
-  draft: "Draft",
-  sent: "Sent",
-  paid: "Paid",
-  void: "Void",
-  overdue: "Overdue"
-};
-
 export const PAYMENT_STATUSES = [
   "unpaid",
   "pending",

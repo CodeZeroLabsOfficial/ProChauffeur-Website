@@ -82,6 +82,7 @@ export function TripDetailView({ tripId }: TripDetailViewProps) {
   const total = trip.quote.quotedTotal;
   const currency = trip.quote.quotedCurrencyCode || "AUD";
   const paymentStatus = trip.billing.paymentStatus;
+  const receiptUrl = trip.billing.stripeReceiptUrl?.trim() || "";
 
   return (
     <div className="space-y-6">
@@ -158,6 +159,15 @@ export function TripDetailView({ tripId }: TripDetailViewProps) {
                 {paymentStatus ? paymentStatusTitle[paymentStatus] : "—"}
               </p>
             </div>
+            {receiptUrl ? (
+              <a
+                href={receiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
+                Download receipt
+              </a>
+            ) : null}
           </CardContent>
         </Card>
 
