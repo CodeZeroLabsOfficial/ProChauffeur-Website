@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Table } from "@tanstack/react-table";
 import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "lucide-react";
 
+import { TableFilters } from "@/components/dashboard/table-filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import type { FilterField, FilterQuery } from "@/lib/dashboard/filter-query";
 
 export const dataTableClassName =
   "[&_td:first-child]:ps-4 [&_td:last-child]:pe-4 [&_th:first-child]:ps-4 [&_th:last-child]:pe-4";
@@ -23,6 +25,9 @@ export function DataTableFrame<TData>({
   search,
   onSearchChange,
   searchPlaceholder,
+  fields,
+  query,
+  onQueryChange,
   pageSizes = [10, 25, 50],
   rowCount,
   toolbarEnd,
@@ -32,6 +37,9 @@ export function DataTableFrame<TData>({
   search: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder: string;
+  fields?: FilterField[];
+  query?: FilterQuery;
+  onQueryChange?: (query: FilterQuery) => void;
   pageSizes?: number[];
   rowCount: number;
   toolbarEnd?: ReactNode;
@@ -58,6 +66,17 @@ export function DataTableFrame<TData>({
               className="h-7 w-40 ps-8 text-[0.8rem] lg:w-56"
             />
           </div>
+          {fields && query && onQueryChange ? (
+            <TableFilters
+              fields={fields}
+              query={query}
+              onQueryChange={(next) => {
+                onQueryChange(next);
+                table.setPageIndex(0);
+              }}
+              className="flex-1"
+            />
+          ) : null}
           {toolbarEnd}
         </div>
 

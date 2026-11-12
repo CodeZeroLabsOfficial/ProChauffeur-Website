@@ -93,7 +93,7 @@ export function BillingSettingsView() {
     <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-          <CardTitle>Payment methods</CardTitle>
+          <CardTitle className="font-heading text-base font-semibold">Payment methods</CardTitle>
           <Button type="button" size="sm" onClick={() => void handleAddCard()}>
             Add card
           </Button>
@@ -146,7 +146,7 @@ export function BillingSettingsView() {
       {clientSecret ? (
         <Card>
           <CardHeader>
-            <CardTitle>Add card</CardTitle>
+            <CardTitle className="font-heading text-base font-semibold">Add card</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <StripeSetupForm

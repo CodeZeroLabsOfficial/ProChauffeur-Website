@@ -6,13 +6,13 @@ import { useRouter } from "next/navigation";
 import {
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type SortingState
 } from "@tanstack/react-table";
+import { CircleDotIcon, UserIcon, CarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
 import {
@@ -20,20 +20,8 @@ import {
   dataTableClassName
 } from "@/components/dashboard/data-table-frame";
 import { DataTableSkeletonRows } from "@/components/dashboard/data-table-skeleton";
-import {
-  DateRangePicker,
-  dateInRange,
-  thisWeekRange,
-  type DateRangePreset
-} from "@/components/dashboard/date-range-picker";
+import { dateInRange } from "@/components/dashboard/date-range-picker";
 import { TripStatusBadge } from "@/components/dashboard/trip-status-badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -44,8 +32,14 @@ import {
 } from "@/components/ui/table";
 import { useCustomerSession } from "@/lib/auth/use-customer-session";
 import { listenCustomerTrips } from "@/lib/dashboard/customer-trips";
+import {
+  createFilterQuery,
+  type FilterField,
+  type FilterQuery
+} from "@/lib/dashboard/filter-query";
+import { filterTableRows, tableEmptyMessage } from "@/lib/dashboard/filter-query-match";
 import { formatDateTime, shortBookingId } from "@/lib/format";
-import { TRIP_STATUSES } from "@/lib/models/enums";
+import { TRIP_STATUSES, tripStatusTitle } from "@/lib/models/enums";
 import {
   tripDriverLabel,
   tripPickupReferenceDate,
@@ -61,16 +55,14 @@ type TripRow = Trip & {
   searchLabel: string;
 };
 
-export function TripsDataTable() {
+export function TripsDataTable({ dateRange }: { dateRange: DateRange | undefined }) {
   const router = useRouter();
   const { user, isCustomer } = useCustomerSession();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [preset, setPreset] = useState<DateRangePreset>("thisWeek");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => thisWeekRange());
+  const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery());
   const [sorting, setSorting] = useState<SortingState>([]);
 
   useEffect(() => {
@@ -94,28 +86,81 @@ export function TripsDataTable() {
     );
   }, [isCustomer, user?.uid]);
 
-  const rows = useMemo<TripRow[]>(
+  const datedTrips = useMemo(
+    () => trips.filter((trip) => dateInRange(tripPickupReferenceDate(trip), dateRange)),
+    [trips, dateRange]
+  );
+
+  const data = useMemo<TripRow[]>(
     () =>
-      trips
-        .filter((trip) => dateInRange(tripPickupReferenceDate(trip), dateRange))
-        .filter((trip) => (statusFilter === "all" ? true : trip.status === statusFilter))
-        .map((trip) => {
-          const bookingIdLabel = shortBookingId(trip.id);
-          const driverLabel = tripDriverLabel(trip);
-          const vehicleLabel = tripVehicleLabel(trip);
-          const pickupLabel = formatDateTime(tripPickupReferenceDate(trip));
-          return {
-            ...trip,
-            bookingIdLabel,
-            pickupLabel,
-            driverLabel,
-            vehicleLabel,
-            searchLabel: [bookingIdLabel, driverLabel, vehicleLabel, pickupLabel]
-              .join(" ")
-              .toLowerCase()
-          };
-        }),
-    [trips, dateRange, statusFilter]
+      datedTrips.map((trip) => {
+        const bookingIdLabel = shortBookingId(trip.id);
+        const driverLabel = tripDriverLabel(trip);
+        const vehicleLabel = tripVehicleLabel(trip);
+        const pickupLabel = formatDateTime(tripPickupReferenceDate(trip));
+        return {
+          ...trip,
+          bookingIdLabel,
+          pickupLabel,
+          driverLabel,
+          vehicleLabel,
+          searchLabel: [bookingIdLabel, driverLabel, vehicleLabel, pickupLabel]
+            .join(" ")
+            .toLowerCase()
+        };
+      }),
+    [datedTrips]
+  );
+
+  const fields = useMemo<FilterField[]>(
+    () => [
+      {
+        id: "status",
+        label: "Status",
+        type: "select",
+        defaultOperator: "is_any_of",
+        searchable: false,
+        icon: <CircleDotIcon />,
+        options: TRIP_STATUSES.map((status) => ({
+          value: status,
+          label: tripStatusTitle[status]
+        }))
+      },
+      {
+        id: "driver",
+        label: "Driver",
+        type: "text",
+        defaultOperator: "contains",
+        icon: <UserIcon />,
+        placeholder: "Driver name"
+      },
+      {
+        id: "vehicle",
+        label: "Vehicle",
+        type: "text",
+        defaultOperator: "contains",
+        icon: <CarIcon />,
+        placeholder: "Vehicle"
+      }
+    ],
+    []
+  );
+
+  const rows = useMemo(
+    () =>
+      filterTableRows(
+        data,
+        query,
+        search,
+        (row, path) => {
+          if (path === "status") return row.status;
+          if (path === "driver") return row.driverLabel;
+          if (path === "vehicle") return row.vehicleLabel;
+          return undefined;
+        },
+        (row) => row.searchLabel
+      ),
+    [data, query, search]
   );
 
   const columns = useMemo<ColumnDef<TripRow>[]>(
@@ -155,25 +200,19 @@ export function TripsDataTable() {
   const table = useReactTable({
     data: rows,
     columns,
-    state: {
-      sorting,
-      globalFilter: search
-    },
+    state: { sorting },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setSearch,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const query = String(filterValue ?? "")
-        .trim()
-        .toLowerCase();
-      if (!query) return true;
-      return row.original.searchLabel.includes(query);
-    },
     initialState: { pagination: { pageSize: 10 } }
   });
+
+  const emptyLabel = tableEmptyMessage(
+    datedTrips.length,
+    rows.length,
+    "No trips in this range."
+  );
 
   return (
     <div className="space-y-3">
@@ -183,36 +222,10 @@ export function TripsDataTable() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search trips…"
-        rowCount={table.getFilteredRowModel().rows.length}
-        toolbarEnd={
-          <>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                if (value == null) return;
-                setStatusFilter(value);
-                table.setPageIndex(0);
-              }}>
-              <SelectTrigger size="sm" className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {TRIP_STATUSES.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status.replaceAll("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <DateRangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              preset={preset}
-              onPresetChange={setPreset}
-            />
-          </>
-        }>
+        fields={fields}
+        query={query}
+        onQueryChange={setQuery}
+        rowCount={rows.length}>
         <div data-slot="table-container" className="overflow-x-auto">
           <Table className={dataTableClassName}>
             <TableHeader>
@@ -248,8 +261,10 @@ export function TripsDataTable() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="text-muted-foreground h-24 text-center">
-                    No trips in this range.
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-muted-foreground h-24 text-center">
+                    {emptyLabel}
                   </TableCell>
                 </TableRow>
               )}

@@ -190,7 +190,7 @@ export function SiteHeader({
                   <Link
                     key={link.label}
                     href={link.href}
-                    className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                    className="font-display py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
                     onClick={() => setIsOpen(false)}>
                     {link.label}
                   </Link>
@@ -198,7 +198,7 @@ export function SiteHeader({
                 {showSignIn && ready && !isCustomer ? (
                   <button
                     type="button"
-                    className="font-heading py-2 text-left text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                    className="font-display py-2 text-left text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
                     onClick={() => {
                       setIsOpen(false);
                       setSignInOpen(true);
@@ -210,13 +210,13 @@ export function SiteHeader({
                   <>
                     <Link
                       href="/dashboard/trips"
-                      className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                      className="font-display py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
                       onClick={() => setIsOpen(false)}>
                       My trips
                     </Link>
                     <Link
                       href="/dashboard/settings/account"
-                      className="font-heading py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                      className="font-display py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
                       onClick={() => setIsOpen(false)}>
                       Account Settings
                     </Link>

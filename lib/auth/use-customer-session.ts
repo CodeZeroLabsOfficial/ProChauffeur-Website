@@ -3,7 +3,7 @@
 import { onAuthStateChanged, signOut, type User } from "firebase/auth";
 import { useEffect, useState } from "react";
 
-import { isEmailAuthenticatedUser } from "@/lib/booking/auth-otp";
+import { isEmailAuthenticatedUser } from "@/lib/auth/auth-otp";
 import { ensureAnonymousAuth } from "@/lib/firebase/ensure-anonymous";
 import { firebaseAuth } from "@/lib/firebase/client";
 

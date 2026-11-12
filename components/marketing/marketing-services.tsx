@@ -145,7 +145,7 @@ export function MarketingServices() {
       className="bg-background flex min-h-[100svh] scroll-mt-16 flex-col px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col">
         <header className="mb-8 max-w-xl shrink-0 space-y-3 lg:mb-12">
-          <h2 className="font-heading text-4xl tracking-tight text-balance sm:text-5xl">
+          <h2 className="font-display text-4xl tracking-tight text-balance sm:text-5xl">
             Travel that fits the day.
           </h2>
           <p className="text-muted-foreground text-base text-balance sm:text-lg">

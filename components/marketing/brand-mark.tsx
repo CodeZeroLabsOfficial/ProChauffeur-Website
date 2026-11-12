@@ -21,7 +21,7 @@ export function BrandMark({ className, priority = false }: BrandMarkProps) {
         className="size-8 rounded-md object-cover"
         priority={priority}
       />
-      <span className="font-heading text-xl tracking-tight">Elite Chauffeurs</span>
+      <span className="font-display text-xl tracking-tight">Elite Chauffeurs</span>
     </Link>
   );
 }

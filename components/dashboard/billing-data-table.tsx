@@ -4,14 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type SortingState
 } from "@tanstack/react-table";
-import { DownloadIcon } from "lucide-react";
+import { CircleDotIcon, CreditCardIcon, DownloadIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
 import {
@@ -19,22 +18,10 @@ import {
   dataTableClassName
 } from "@/components/dashboard/data-table-frame";
 import { DataTableSkeletonRows } from "@/components/dashboard/data-table-skeleton";
-import {
-  DateRangePicker,
-  dateInRange,
-  thisWeekRange,
-  type DateRangePreset
-} from "@/components/dashboard/date-range-picker";
+import { dateInRange } from "@/components/dashboard/date-range-picker";
 import { InvoiceStatusBadge } from "@/components/dashboard/invoice-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -45,8 +32,14 @@ import {
 } from "@/components/ui/table";
 import { useCustomerSession } from "@/lib/auth/use-customer-session";
 import { listenCustomerInvoices } from "@/lib/dashboard/customer-invoices";
+import {
+  createFilterQuery,
+  type FilterField,
+  type FilterQuery
+} from "@/lib/dashboard/filter-query";
+import { filterTableRows, tableEmptyMessage } from "@/lib/dashboard/filter-query-match";
 import { formatDate, formatMoneyAmount } from "@/lib/format";
-import { INVOICE_STATUSES } from "@/lib/models/enums";
+import { INVOICE_STATUSES, invoiceStatusTitle } from "@/lib/models/enums";
 import { invoiceIsCorporate, type Invoice } from "@/lib/models/invoice";
 
 type InvoiceRow = Invoice & {
@@ -54,18 +47,17 @@ type InvoiceRow = Invoice & {
   issuedLabel: string;
   amountLabel: string;
   paymentMethodLabel: "Corporate" | "Card";
+  paymentMethodValue: "corporate" | "card";
   canDownloadReceipt: boolean;
 };
 
-export function BillingDataTable() {
+export function BillingDataTable({ dateRange }: { dateRange: DateRange | undefined }) {
   const { user, isCustomer } = useCustomerSession();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [preset, setPreset] = useState<DateRangePreset>("thisWeek");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => thisWeekRange());
+  const [query, setQuery] = useState<FilterQuery>(() => createFilterQuery());
   const [sorting, setSorting] = useState<SortingState>([]);
 
   useEffect(() => {
@@ -89,30 +81,79 @@ export function BillingDataTable() {
     );
   }, [isCustomer, user?.uid]);
 
-  const rows = useMemo<InvoiceRow[]>(
+  const datedInvoices = useMemo(
+    () => invoices.filter((invoice) => dateInRange(invoice.issuedAt, dateRange)),
+    [invoices, dateRange]
+  );
+
+  const data = useMemo<InvoiceRow[]>(
     () =>
-      invoices
-        .filter((invoice) => dateInRange(invoice.issuedAt, dateRange))
-        .filter((invoice) =>
-          statusFilter === "all" ? true : invoice.status === statusFilter
-        )
-        .map((invoice) => {
-          const paymentMethodLabel = invoiceIsCorporate(invoice) ? "Corporate" : "Card";
-          const issuedLabel = formatDate(invoice.issuedAt);
-          const amountLabel = formatMoneyAmount(invoice.total, invoice.currencyCode);
-          const canDownloadReceipt = Boolean(invoice.stripeHostedInvoiceUrl?.trim());
-          return {
-            ...invoice,
-            paymentMethodLabel,
-            issuedLabel,
-            amountLabel,
-            canDownloadReceipt,
-            searchLabel: [invoice.invoiceNumber, amountLabel, paymentMethodLabel, issuedLabel]
-              .join(" ")
-              .toLowerCase()
-          };
-        }),
-    [invoices, dateRange, statusFilter]
+      datedInvoices.map((invoice) => {
+        const isCorporate = invoiceIsCorporate(invoice);
+        const paymentMethodLabel = isCorporate ? "Corporate" : "Card";
+        const paymentMethodValue = isCorporate ? "corporate" : "card";
+        const issuedLabel = formatDate(invoice.issuedAt);
+        const amountLabel = formatMoneyAmount(invoice.total, invoice.currencyCode);
+        const canDownloadReceipt = Boolean(invoice.stripeHostedInvoiceUrl?.trim());
+        return {
+          ...invoice,
+          paymentMethodLabel,
+          paymentMethodValue,
+          issuedLabel,
+          amountLabel,
+          canDownloadReceipt,
+          searchLabel: [invoice.invoiceNumber, amountLabel, paymentMethodLabel, issuedLabel]
+            .join(" ")
+            .toLowerCase()
+        };
+      }),
+    [datedInvoices]
+  );
+
+  const fields = useMemo<FilterField[]>(
+    () => [
+      {
+        id: "status",
+        label: "Status",
+        type: "select",
+        defaultOperator: "is_any_of",
+        searchable: false,
+        icon: <CircleDotIcon />,
+        options: INVOICE_STATUSES.map((status) => ({
+          value: status,
+          label: invoiceStatusTitle[status]
+        }))
+      },
+      {
+        id: "paymentMethod",
+        label: "Payment Method",
+        type: "select",
+        defaultOperator: "is_any_of",
+        searchable: false,
+        icon: <CreditCardIcon />,
+        options: [
+          { value: "card", label: "Card" },
+          { value: "corporate", label: "Corporate" }
+        ]
+      }
+    ],
+    []
+  );
+
+  const rows = useMemo(
+    () =>
+      filterTableRows(
+        data,
+        query,
+        search,
+        (row, path) => {
+          if (path === "status") return row.status;
+          if (path === "paymentMethod") return row.paymentMethodValue;
+          return undefined;
+        },
+        (row) => row.searchLabel
+      ),
+    [data, query, search]
   );
 
   const columns = useMemo<ColumnDef<InvoiceRow>[]>(
@@ -177,22 +218,19 @@ export function BillingDataTable() {
   const table = useReactTable({
     data: rows,
     columns,
-    state: { sorting, globalFilter: search },
+    state: { sorting },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setSearch,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const query = String(filterValue ?? "")
-        .trim()
-        .toLowerCase();
-      if (!query) return true;
-      return row.original.searchLabel.includes(query);
-    },
     initialState: { pagination: { pageSize: 10 } }
   });
+
+  const emptyLabel = tableEmptyMessage(
+    datedInvoices.length,
+    rows.length,
+    "No invoices in this range."
+  );
 
   return (
     <div className="space-y-3">
@@ -202,36 +240,10 @@ export function BillingDataTable() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search invoices…"
-        rowCount={table.getFilteredRowModel().rows.length}
-        toolbarEnd={
-          <>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => {
-                if (value == null) return;
-                setStatusFilter(value);
-                table.setPageIndex(0);
-              }}>
-              <SelectTrigger size="sm" className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                {INVOICE_STATUSES.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <DateRangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              preset={preset}
-              onPresetChange={setPreset}
-            />
-          </>
-        }>
+        fields={fields}
+        query={query}
+        onQueryChange={setQuery}
+        rowCount={rows.length}>
         <div data-slot="table-container" className="overflow-x-auto">
           <Table className={dataTableClassName}>
             <TableHeader>
@@ -265,7 +277,7 @@ export function BillingDataTable() {
                   <TableCell
                     colSpan={columns.length}
                     className="text-muted-foreground h-24 text-center">
-                    No invoices in this range.
+                    {emptyLabel}
                   </TableCell>
                 </TableRow>
               )}

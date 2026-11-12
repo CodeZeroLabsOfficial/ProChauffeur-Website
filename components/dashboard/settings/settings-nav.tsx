@@ -20,7 +20,7 @@ export function SettingsNav() {
   return (
     <Card className="py-0">
       <CardContent className="p-2">
-        <nav className="flex flex-col gap-0.5">
+        <nav className="flex flex-col space-y-0.5">
           {items.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
@@ -30,11 +30,11 @@ export function SettingsNav() {
                 href={item.href}
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
-                  "justify-start",
-                  active && "bg-muted"
+                  "hover:bg-muted justify-start gap-2",
+                  active && "bg-muted hover:bg-muted"
                 )}>
-                <Icon />
-                {item.title}
+                <Icon className="size-4 shrink-0" />
+                <span>{item.title}</span>
               </Link>
             );
           })}

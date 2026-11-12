@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { BookingChrome } from "@/components/booking/booking-chrome";
 import { StripePaymentForm } from "@/components/booking/stripe-payment-form";
 import { buttonVariants } from "@/components/ui/button";
-import { isEmailAuthenticatedUser } from "@/lib/booking/auth-otp";
+import { isEmailAuthenticatedUser } from "@/lib/auth/auth-otp";
 import { useBookingStore } from "@/lib/booking/booking-store";
 import { buildTripPayloads } from "@/lib/booking/build-trip-payload";
 import {

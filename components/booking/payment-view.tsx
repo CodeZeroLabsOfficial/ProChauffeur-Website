@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 
-import { AuthOtpPanel } from "@/components/booking/auth-otp-panel";
+import { LoginForm } from "@/components/auth/login-form";
 import { BookingChrome } from "@/components/booking/booking-chrome";
 import { buttonVariants } from "@/components/ui/button";
-import { isEmailAuthenticatedUser } from "@/lib/booking/auth-otp";
+import { isEmailAuthenticatedUser } from "@/lib/auth/auth-otp";
 import { useBookingStore } from "@/lib/booking/booking-store";
 import { useBookingGuard } from "@/lib/booking/use-booking-guard";
 import { firebaseAuth } from "@/lib/firebase/client";
@@ -60,7 +60,10 @@ export function PaymentView() {
         </div>
 
         {!emailAuthed ? (
-          <AuthOtpPanel onVerified={() => setEmailAuthed(true)} />
+          <LoginForm
+            className="mx-0"
+            onVerified={() => setEmailAuthed(true)}
+          />
         ) : (
           <div className="space-y-6">
             <section className="space-y-3">

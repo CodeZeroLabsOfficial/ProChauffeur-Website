@@ -22,13 +22,22 @@ export function AppearanceSettingsView() {
   }, []);
 
   if (!mounted) {
-    return <p className="text-muted-foreground text-sm">Loading appearance…</p>;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-heading text-base font-semibold">Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-sm">Loading appearance…</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Appearance</CardTitle>
+        <CardTitle className="font-heading text-base font-semibold">Appearance</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {THEMES.map((item) => {

@@ -6,12 +6,12 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
   return (
     <div className="mx-auto max-w-5xl space-y-4 lg:space-y-6">
       <div className="space-y-0.5">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Settings</h1>
+        <h1 className="font-heading text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground text-sm">
           Manage your account, payment methods, and appearance.
         </p>
       </div>
-      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+      <div className="flex flex-col space-y-4 lg:flex-row lg:space-y-0 lg:space-x-6">
         <aside className="lg:w-64">
           <SettingsNav />
         </aside>

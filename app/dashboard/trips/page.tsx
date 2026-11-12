@@ -1,11 +1,5 @@
-import { ListPageHeader } from "@/components/dashboard/list-page-header";
-import { TripsDataTable } from "@/components/dashboard/trips-data-table";
+import { TripsPage } from "@/components/dashboard/trips-page";
 
 export default function DashboardTripsPage() {
-  return (
-    <>
-      <ListPageHeader title="My Trips" description="Current and past bookings." />
-      <TripsDataTable />
-    </>
-  );
+  return <TripsPage />;
 }
