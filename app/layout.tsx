@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 
@@ -10,6 +10,12 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans"
 });
 
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cormorant"
+});
+
 export const metadata: Metadata = {
   title: "Elite Chauffeurs",
   description: "Book professional chauffeur travel."
@@ -17,7 +23,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${dmSans.variable} ${cormorantGaramond.variable} h-full antialiased`}>
       <body className="bg-background text-foreground flex min-h-full flex-col font-sans">
         {children}
         <Toaster />

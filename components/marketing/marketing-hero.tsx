@@ -19,11 +19,11 @@ export function MarketingHero() {
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col items-center justify-center px-4 pt-24 pb-16 sm:px-6 sm:pt-28 sm:pb-20">
         <div className="animate-hero-copy mb-10 w-full space-y-4 text-center">
-          <p className="font-heading text-4xl tracking-tight text-balance sm:text-5xl md:text-6xl">
-            Arrive rested. Leave the road to us.
+          <p className="font-heading text-5xl tracking-tight text-balance sm:text-6xl md:text-7xl">
+            Private Luxury Chauffeur Services
           </p>
           <h1 className="mx-auto max-w-2xl text-lg text-white/85 text-balance sm:text-xl">
-            Private luxury chauffeurs for airport, city, and hourly journeys.
+            Arrive rested. Leave the road to us.
           </h1>
         </div>
         <HeroBookingStrip />

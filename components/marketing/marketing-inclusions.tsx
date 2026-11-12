@@ -60,7 +60,7 @@ export function MarketingInclusions() {
     <section className="flex min-h-[100svh] scroll-mt-16 flex-col bg-neutral-950 px-4 py-14 text-white sm:px-6 sm:py-20">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col">
         <header className="mx-auto mb-8 max-w-xl shrink-0 space-y-3 text-center lg:mb-12">
-          <h2 className="font-heading text-3xl tracking-tight text-balance sm:text-4xl">
+          <h2 className="font-heading text-4xl tracking-tight text-balance sm:text-5xl">
             Included in every ride.
           </h2>
           <p className="text-base text-white/70 text-balance sm:text-lg">
