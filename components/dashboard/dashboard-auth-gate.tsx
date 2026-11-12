@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
-import { LoginForm } from "@/components/auth/login-form";
 import { useCustomerSession } from "@/lib/auth/use-customer-session";
 
 type DashboardAuthGateProps = {
@@ -10,7 +10,15 @@ type DashboardAuthGateProps = {
 };
 
 export function DashboardAuthGate({ children }: DashboardAuthGateProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { ready, isCustomer } = useCustomerSession();
+
+  useEffect(() => {
+    if (!ready || isCustomer) return;
+    const redirect = encodeURIComponent(pathname || "/dashboard/trips");
+    router.replace(`/login?redirect=${redirect}`);
+  }, [ready, isCustomer, pathname, router]);
 
   if (!ready) {
     return (
@@ -22,8 +30,8 @@ export function DashboardAuthGate({ children }: DashboardAuthGateProps) {
 
   if (!isCustomer) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center py-4 lg:min-h-[70vh]">
-        <LoginForm />
+      <div className="text-muted-foreground flex min-h-[50vh] items-center justify-center p-8 text-sm">
+        Redirecting to sign in…
       </div>
     );
   }

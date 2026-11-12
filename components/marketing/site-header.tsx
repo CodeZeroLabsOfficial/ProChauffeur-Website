@@ -4,7 +4,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 
 import { AccountMenu } from "@/components/auth/account-menu";
-import { SignInDialog } from "@/components/auth/sign-in-dialog";
 import { BrandMark } from "@/components/marketing/brand-mark";
 import { useCustomerSession } from "@/lib/auth/use-customer-session";
 import { cn } from "@/lib/utils";
@@ -56,10 +55,9 @@ export function SiteHeader({
   showSignIn = true,
   scrollGlass = true
 }: SiteHeaderProps) {
-  const { ready, isCustomer, email } = useCustomerSession();
+  const { ready, isCustomer } = useCustomerSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isGlass, setIsGlass] = useState(false);
-  const [signInOpen, setSignInOpen] = useState(false);
   const hasCenter = center != null;
 
   useEffect(() => {
@@ -98,12 +96,12 @@ export function SiteHeader({
   const authControl =
     showSignIn && ready ? (
       isCustomer ? (
-        <AccountMenu email={email} />
+        <AccountMenu />
       ) : (
-        <button type="button" className={navLinkClassName} onClick={() => setSignInOpen(true)}>
+        <Link href="/login" className={navLinkClassName}>
           Sign in
           <SignInIcon />
-        </button>
+        </Link>
       )
     ) : showSignIn ? (
       <span className={cn(navLinkClassName, "opacity-50")}>Sign in</span>
@@ -196,39 +194,23 @@ export function SiteHeader({
                   </Link>
                 ))}
                 {showSignIn && ready && !isCustomer ? (
-                  <button
-                    type="button"
-                    className="font-display py-2 text-left text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
-                    onClick={() => {
-                      setIsOpen(false);
-                      setSignInOpen(true);
-                    }}>
+                  <Link
+                    href="/login"
+                    className="font-display py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
+                    onClick={() => setIsOpen(false)}>
                     Sign in
-                  </button>
+                  </Link>
                 ) : null}
                 {showSignIn && ready && isCustomer ? (
-                  <>
-                    <Link
-                      href="/dashboard/trips"
-                      className="font-display py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
-                      onClick={() => setIsOpen(false)}>
-                      My trips
-                    </Link>
-                    <Link
-                      href="/dashboard/settings/account"
-                      className="font-display py-2 text-2xl font-medium tracking-tight text-white transition-opacity hover:opacity-60"
-                      onClick={() => setIsOpen(false)}>
-                      Account Settings
-                    </Link>
-                  </>
+                  <div className="pt-2" onClick={() => setIsOpen(false)}>
+                    <AccountMenu />
+                  </div>
                 ) : null}
               </div>
             </div>
           </div>
         ) : null}
       </header>
-
-      <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
     </>
   );
 }

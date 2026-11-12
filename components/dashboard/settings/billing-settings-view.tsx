@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { StripeSetupForm } from "@/components/dashboard/settings/stripe-setup-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import { useCustomerSession } from "@/lib/auth/use-customer-session";
 import {
   listenSavedCards,
@@ -83,20 +91,26 @@ export function BillingSettingsView() {
       await setDefaultSavedCard(card.stripePaymentMethodId);
       toast.success("Default card updated.");
     } catch (error) {
-      toast.error(error instanceof SavedCardsError ? error.message : "Could not update default card.");
+      toast.error(
+        error instanceof SavedCardsError ? error.message : "Could not update default card."
+      );
     } finally {
       setBusyId(null);
     }
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-          <CardTitle className="font-heading text-base font-semibold">Payment methods</CardTitle>
-          <Button type="button" size="sm" onClick={() => void handleAddCard()}>
-            Add card
-          </Button>
+    <div className="w-full space-y-4">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Payment methods</CardTitle>
+          <CardDescription>Cards saved for booking checkout.</CardDescription>
+          <CardAction>
+            <Button type="button" size="sm" onClick={() => void handleAddCard()}>
+              <PlusIcon />
+              Add card
+            </Button>
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
@@ -144,9 +158,10 @@ export function BillingSettingsView() {
       </Card>
 
       {clientSecret ? (
-        <Card>
+        <Card className="w-full">
           <CardHeader>
-            <CardTitle className="font-heading text-base font-semibold">Add card</CardTitle>
+            <CardTitle>Add card</CardTitle>
+            <CardDescription>Enter card details to save for future trips.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <StripeSetupForm

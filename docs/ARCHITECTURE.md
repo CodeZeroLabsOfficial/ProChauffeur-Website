@@ -19,7 +19,7 @@ Customer-facing Elite Chauffeurs site: marketing pages, booking funnel matching 
 
 Legacy `/book` URLs redirect to `/booking`. Marketing hero may pre-fill estimate entry fields; it is not a separate booking product.
 
-Site chrome uses one shared `SiteHeader` (black, logo left) on marketing and booking. Sign in opens an email OTP modal; signed-in customers get an account menu (**My trips** → `/dashboard/trips`). The estimate step adds a black trip field strip under the header.
+Site chrome uses one shared `SiteHeader` (black, logo left) on marketing and booking. Sign in goes to `/login` (email OTP); signed-in customers get an account menu (**My trips** → `/dashboard/trips`). The estimate step adds a black trip field strip under the header.
 
 ## Customer dashboard
 

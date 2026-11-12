@@ -8,20 +8,32 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-const items = [
-  { title: "Account Settings", href: "/dashboard/settings/account", icon: UserIcon },
-  { title: "Billing", href: "/dashboard/settings/billing", icon: CreditCardIcon },
-  { title: "Appearance", href: "/dashboard/settings/appearance", icon: PaletteIcon }
+const sidebarNavItems = [
+  {
+    title: "Account",
+    href: "/dashboard/settings/account",
+    icon: UserIcon
+  },
+  {
+    title: "Billing",
+    href: "/dashboard/settings/billing",
+    icon: CreditCardIcon
+  },
+  {
+    title: "Appearance",
+    href: "/dashboard/settings/appearance",
+    icon: PaletteIcon
+  }
 ] as const;
 
 export function SettingsNav() {
   const pathname = usePathname();
 
   return (
-    <Card className="py-0">
+    <Card className="w-full py-0">
       <CardContent className="p-2">
-        <nav className="flex flex-col space-y-0.5">
-          {items.map((item) => {
+        <nav className="flex flex-col space-y-0.5 space-x-2 lg:space-x-0">
+          {sidebarNavItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             return (
@@ -30,11 +42,11 @@ export function SettingsNav() {
                 href={item.href}
                 className={cn(
                   buttonVariants({ variant: "ghost" }),
-                  "hover:bg-muted justify-start gap-2",
-                  active && "bg-muted hover:bg-muted"
+                  "hover:bg-muted justify-start",
+                  active ? "bg-muted hover:bg-muted" : ""
                 )}>
-                <Icon className="size-4 shrink-0" />
-                <span>{item.title}</span>
+                <Icon />
+                {item.title}
               </Link>
             );
           })}

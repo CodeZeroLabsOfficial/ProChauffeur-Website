@@ -31,7 +31,6 @@ export function LoginForm({
 }) {
   const [mode, setMode] = useState<LoginFormMode>(initialMode);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [otpOpen, setOtpOpen] = useState(false);
   const [challengeId, setChallengeId] = useState("");
@@ -64,7 +63,6 @@ export function LoginForm({
   function finishVerified() {
     setOtpOpen(false);
     setChallengeId("");
-    setPassword("");
     onVerified?.();
   }
 
@@ -93,22 +91,6 @@ export function LoginForm({
                 required
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                disabled={loading}
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="login-password">Password</Label>
-                <span className="text-muted-foreground ml-auto inline-block text-sm underline">
-                  Forgot your password?
-                </span>
-              </div>
-              <Input
-                id="login-password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
                 disabled={loading}
               />
             </div>

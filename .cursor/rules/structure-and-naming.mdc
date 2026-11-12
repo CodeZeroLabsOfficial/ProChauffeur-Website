@@ -10,7 +10,7 @@ alwaysApply: true
 ```text
 app/                 # App Router pages only
 components/
-  auth/              # sign-in dialog, account menu
+  auth/              # login page/form, OTP dialog, account menu
   marketing/         # navbar, hero, features, CTA
   booking/           # fare estimate + wizard steps
   dashboard/         # customer dashboard shell, tables, settings
