@@ -57,6 +57,11 @@ export type BookingTripPayload = {
   driverID: null;
 };
 
+export type BookingTripIds = {
+  outboundId: string;
+  returnId: string | null;
+};
+
 export type BuildTripPayloadInput = {
   customerId: string;
   customerEmail: string | null;
@@ -74,13 +79,21 @@ export type BuildTripPayloadInput = {
   vehicleClass: VehicleClass;
   selectedAddons: PricingAddon[];
   quote: QuoteResult;
+  tripIds?: BookingTripIds;
 };
 
-function newTripId(): string {
+export function newBookingTripId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
   return `trip_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export function allocateBookingTripIds(needsReturn: boolean): BookingTripIds {
+  return {
+    outboundId: newBookingTripId(),
+    returnId: needsReturn ? newBookingTripId() : null
+  };
 }
 
 function legPayload(
@@ -156,16 +169,25 @@ function legPayload(
   };
 }
 
-/** Builds one or two pending trip docs matching paymentsCreateCardPayment contract. */
-export function buildTripPayloads(input: BuildTripPayloadInput): BookingTripPayload[] {
-  const outboundId = newTripId();
-  const isReturn =
+function isReturnItinerary(input: BuildTripPayloadInput): boolean {
+  return (
     input.serviceType === "transfer" &&
     input.itinerary === "return" &&
     input.scheduledReturnAt instanceof Date &&
-    !Number.isNaN(input.scheduledReturnAt.getTime());
+    !Number.isNaN(input.scheduledReturnAt.getTime())
+  );
+}
 
-  if (!isReturn) {
+/** Builds one or two pending trip docs matching paymentsCreateCardPayment contract. */
+export function buildTripPayloads(input: BuildTripPayloadInput): BookingTripPayload[] {
+  const isReturn = isReturnItinerary(input);
+  const ids =
+    input.tripIds ??
+    allocateBookingTripIds(isReturn);
+  const outboundId = ids.outboundId;
+  const returnId = isReturn ? ids.returnId ?? newBookingTripId() : null;
+
+  if (!isReturn || !returnId) {
     return [
       legPayload(input, {
         id: outboundId,
@@ -177,7 +199,6 @@ export function buildTripPayloads(input: BuildTripPayloadInput): BookingTripPayl
     ];
   }
 
-  const returnId = newTripId();
   return [
     legPayload(input, {
       id: outboundId,

@@ -18,9 +18,16 @@ import {
 } from "@/components/booking/stripe-payment-form";
 import { buttonVariants } from "@/components/ui/button";
 import { isEmailAuthenticatedUser } from "@/lib/auth/auth-otp";
-import { useBookingStore } from "@/lib/booking/booking-store";
 import { clearBookingSession } from "@/lib/booking/booking-session";
-import { buildTripPayloads } from "@/lib/booking/build-trip-payload";
+import {
+  useBookingStore,
+  type SelectedPlace
+} from "@/lib/booking/booking-store";
+import {
+  allocateBookingTripIds,
+  buildTripPayloads,
+  type BookingTripIds
+} from "@/lib/booking/build-trip-payload";
 import {
   createTripCardPayment,
   TripPaymentError
@@ -31,6 +38,11 @@ import { getStripePublishableKey } from "@/lib/env";
 import { firebaseAuth } from "@/lib/firebase/client";
 import { formatDistanceKm, formatDurationMinutes } from "@/lib/mapbox/directions";
 import { cn } from "@/lib/utils";
+
+function placeAttemptKey(place: SelectedPlace | null): string {
+  if (!place) return "";
+  return `${place.coordinate.latitude},${place.coordinate.longitude}|${place.addressLine}`;
+}
 
 export function SummaryView() {
   const router = useRouter();
@@ -50,11 +62,12 @@ export function SummaryView() {
   const largeLuggage = useBookingStore((s) => s.largeLuggage);
   const quote = useBookingStore((s) => s.quote);
   const route = useBookingStore((s) => s.route);
+  const isRouting = useBookingStore((s) => s.isRouting);
+  const isQuoting = useBookingStore((s) => s.isQuoting);
   const selectedAddonIds = useBookingStore((s) => s.selectedAddonIds);
   const availableAddons = useBookingStore((s) => s.availableAddons);
   const selectedVehicleClass = useBookingStore((s) => s.selectedVehicleClass);
   const selectedVehicleClassId = useBookingStore((s) => s.selectedVehicleClassId);
-  const vehicleClasses = useBookingStore((s) => s.vehicleClasses);
 
   const [emailAuthed, setEmailAuthed] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -67,7 +80,9 @@ export function SummaryView() {
   const [saveCard, setSaveCard] = useState(false);
   const [selection, setSelection] = useState<PaymentSelection>({ mode: "new" });
   const paymentFormRef = useRef<StripePaymentConfirmHandle | null>(null);
-  const prepareSeq = useRef(0);
+  const tripIdsRef = useRef<{ attemptKey: string; ids: BookingTripIds } | null>(null);
+  const preparedForKeyRef = useRef<string | null>(null);
+  const prepareInFlightRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!ready) void bootstrap();
@@ -90,16 +105,42 @@ export function SummaryView() {
 
   const selectionKey =
     selection.mode === "saved" ? `saved:${selection.paymentMethodId}` : "new";
+  const addonKey = [...selectedAddonIds].sort().join(",");
+  const attemptKey = [
+    uid ?? "",
+    placeAttemptKey(pickup),
+    placeAttemptKey(dropoff),
+    scheduledPickupAt instanceof Date ? scheduledPickupAt.toISOString() : "",
+    scheduledReturnAt instanceof Date ? scheduledReturnAt.toISOString() : "",
+    itinerary,
+    serviceType,
+    String(hourlyHours),
+    String(passengers),
+    String(smallLuggage),
+    String(largeLuggage),
+    selectedVehicleClassId ?? "",
+    addonKey
+  ].join("|");
+  const prepareKey = [
+    attemptKey,
+    quote ? `${quote.total}:${quote.currencyCode}` : "",
+    saveCard ? "1" : "0",
+    selectionKey
+  ].join("|");
 
   useEffect(() => {
+    preparedForKeyRef.current = null;
+    prepareInFlightRef.current = null;
     setClientSecret(null);
     setTripId(null);
-  }, [selectionKey, saveCard]);
+  }, [prepareKey]);
 
   useEffect(() => {
     if (!allowed || !authReady || !emailAuthed) return;
     if (selection.mode !== "new") return;
-    if (clientSecret) return;
+    if (isRouting || isQuoting) return;
+    if (preparedForKeyRef.current === prepareKey) return;
+    if (prepareInFlightRef.current === prepareKey) return;
 
     if (!getStripePublishableKey()) {
       setError(
@@ -114,7 +155,20 @@ export function SummaryView() {
       return;
     }
 
-    const seq = ++prepareSeq.current;
+    const needsReturn =
+      serviceType === "transfer" &&
+      itinerary === "return" &&
+      scheduledReturnAt instanceof Date &&
+      !Number.isNaN(scheduledReturnAt.getTime());
+    if (!tripIdsRef.current || tripIdsRef.current.attemptKey !== attemptKey) {
+      tripIdsRef.current = {
+        attemptKey,
+        ids: allocateBookingTripIds(needsReturn)
+      };
+    }
+
+    let cancelled = false;
+    prepareInFlightRef.current = prepareKey;
     setIsPreparingCard(true);
     setError(null);
 
@@ -135,34 +189,40 @@ export function SummaryView() {
       largeLuggage,
       vehicleClass,
       selectedAddons,
-      quote
+      quote,
+      tripIds: tripIdsRef.current.ids
     });
 
     void createTripCardPayment({ trips, saveCard })
       .then((payment) => {
-        if (seq !== prepareSeq.current) return;
+        if (cancelled) return;
+        preparedForKeyRef.current = prepareKey;
         setClientSecret(payment.clientSecret);
         setTripId(payment.tripId);
       })
       .catch((err) => {
-        if (seq !== prepareSeq.current) return;
+        if (cancelled) return;
         setError(err instanceof TripPaymentError ? err.message : "Could not prepare card payment.");
       })
       .finally(() => {
-        if (seq !== prepareSeq.current) return;
-        setIsPreparingCard(false);
+        if (prepareInFlightRef.current === prepareKey) {
+          prepareInFlightRef.current = null;
+        }
+        if (!cancelled) setIsPreparingCard(false);
       });
 
     return () => {
-      prepareSeq.current += 1;
+      cancelled = true;
     };
   }, [
     allowed,
     authReady,
     emailAuthed,
     selection.mode,
-    selectionKey,
-    clientSecret,
+    prepareKey,
+    attemptKey,
+    isRouting,
+    isQuoting,
     saveCard,
     pickup,
     dropoff,
@@ -177,13 +237,26 @@ export function SummaryView() {
     largeLuggage,
     availableAddons,
     selectedAddonIds,
-    selectedVehicleClass,
-    selectedVehicleClassId,
-    vehicleClasses
+    selectedVehicleClass
   ]);
 
   function handleSaveCardChange(next: boolean) {
     setSaveCard(next);
+  }
+
+  function resolveTripIds(): BookingTripIds {
+    const needsReturn =
+      serviceType === "transfer" &&
+      itinerary === "return" &&
+      scheduledReturnAt instanceof Date &&
+      !Number.isNaN(scheduledReturnAt.getTime());
+    if (!tripIdsRef.current || tripIdsRef.current.attemptKey !== attemptKey) {
+      tripIdsRef.current = {
+        attemptKey,
+        ids: allocateBookingTripIds(needsReturn)
+      };
+    }
+    return tripIdsRef.current.ids;
   }
 
   async function handleBookNow() {
@@ -220,7 +293,8 @@ export function SummaryView() {
         largeLuggage,
         vehicleClass,
         selectedAddons,
-        quote
+        quote,
+        tripIds: resolveTripIds()
       });
 
       if (selection.mode === "saved") {
