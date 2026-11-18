@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Cormorant_Garamond, Inter } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans"
 });
@@ -26,7 +26,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html
       lang="en"
-      className={cn("font-sans", dmSans.variable, cormorantGaramond.variable, "h-full antialiased")}>
+      className={cn(
+        "font-sans",
+        inter.variable,
+        cormorantGaramond.variable,
+        "h-full antialiased"
+      )}>
       <body className="bg-background text-foreground flex min-h-full flex-col font-sans">
         {children}
         <Toaster />

@@ -151,7 +151,7 @@ export function MarketingFleet() {
         }
       }}>
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col">
-        <header className="mb-8 max-w-xl shrink-0 space-y-3 lg:mb-12">
+        <header className="mb-8 shrink-0 space-y-3 lg:mb-12">
           <h2 className="font-display text-4xl tracking-tight text-balance text-neutral-950 sm:text-5xl">
             Our Luxury Fleet
           </h2>
