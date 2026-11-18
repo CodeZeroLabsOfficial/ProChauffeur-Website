@@ -11,15 +11,14 @@ Customer-facing Elite Chauffeurs site: marketing pages, booking funnel matching 
 
 ## Booking flow
 
-1. **Fare estimate** (`/booking`) — pickup, drop-off, vehicle class, add-ons, quote
-2. **Trip details** (`/booking/details`) — one-way / return, schedule, passengers, luggage
-3. **Payment** (`/booking/payment`) — Email OTP if guest, then card settlement selection
-4. **Summary** (`/booking/summary`) — review, `createTripCardPayment`, Stripe confirm
-5. **Confirmed** (`/booking/confirmed`) — success
+1. **Fare estimate** (`/booking`) — pickup, drop-off, schedule, passengers, vehicle class, luggage, add-ons, quote. Hero and header trip strip seed/edit journey fields (including one-way / return and passengers).
+2. **Email login / sign-up** (`/login?redirect=/booking/summary`) — when the session is not an email customer
+3. **Summary** (`/booking/summary`) — payment (saved card or new card) + map/fare aside, single Book now → `createTripCardPayment` + Stripe confirm
+4. **Confirmed** (`/booking/confirmed`) — success
 
-Legacy `/book` URLs redirect to `/booking`. Marketing hero may pre-fill estimate entry fields; it is not a separate booking product.
+Legacy `/book` URLs redirect to `/booking`. Marketing hero may pre-fill estimate entry fields; it is not a separate booking product. Journey fields persist in `sessionStorage` across the login round-trip.
 
-Site chrome uses one shared `SiteHeader` (black, logo left) on marketing and booking. Sign in goes to `/login` (email OTP); signed-in customers get an account menu (**My trips** → `/dashboard/trips`). The estimate step adds a black trip field strip under the header.
+Site chrome uses one shared `SiteHeader` (black, logo left) on marketing and booking. Sign in goes to `/login` (email OTP); signed-in customers get an account menu (**My trips** → `/dashboard/trips`). Estimate and Summary use a black trip field strip under the header.
 
 ## Customer dashboard
 
@@ -42,7 +41,7 @@ OTP email delivery uses shared Cloud Functions (`requestAuthOtp` / `verifyAuthOt
 |------|------|
 | Browse marketing | None |
 | Fare estimate / retail quote | Anonymous Auth (session) |
-| Payment / confirm / pay | Email OTP create-account or sign-in (`requestAuthOtp` / `verifyAuthOtp`) |
+| Summary confirm / pay | Email OTP create-account or sign-in (`requestAuthOtp` / `verifyAuthOtp`) |
 | Customer dashboard | Email OTP customer session |
 
 Catalog and Mapbox country/proximity load via callable `getBookingCatalog` (Anonymous allowed). The website does **not** read Firestore catalog collections from the client.
@@ -66,7 +65,7 @@ Location (UI) = `branchId` in code. Do not call staff portal HTTP APIs from this
 - No service-account or Stripe secret keys in the client bundle
 - Do not log addresses, phones, or payment refs
 - Client totals are display-only; server recomputes fare on `createTripCardPayment`
-- Wizard steps guard incomplete state and send guests back to earlier routes
+- Booking steps guard incomplete state and send users back to `/booking`; guests are sent to `/login` before Summary pay
 - No public Firestore rules for anonymous catalog reads
 
 ## Layout

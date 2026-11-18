@@ -2,14 +2,20 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 import { SiteHeader } from "@/components/marketing/site-header";
 import { buttonVariants } from "@/components/ui/button";
+import { clearBookingSession } from "@/lib/booking/booking-session";
 import { cn } from "@/lib/utils";
 
 export function ConfirmedView() {
   const params = useSearchParams();
   const tripId = params.get("tripId");
+
+  useEffect(() => {
+    clearBookingSession();
+  }, []);
 
   return (
     <div className="bg-background flex min-h-full flex-col">

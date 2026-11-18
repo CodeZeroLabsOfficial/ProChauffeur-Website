@@ -9,10 +9,9 @@ Customer booking on this site must match the product outcomes of the live iOS v2
 
 ## Flow order
 
-1. **Fare estimate** — pickup, drop-off, vehicle class, add-ons, live quote
-2. **Trip details** — one-way / return, schedule, passengers, luggage
-3. **Payment** — card / Apple Pay / saved methods / corporate when linked
-4. **Summary** — review, then confirm
+1. **Fare estimate** — pickup, drop-off, schedule, passengers (hero/strip), vehicle class, luggage, add-ons, live quote; strip may toggle one-way / return
+2. **Email login / sign-up** — required if the session is not an email customer
+3. **Summary** — payment (saved card or new card) + map/fare review, then confirm
 
 Do not invent a parallel funnel (e.g. hotel check-in as the whole product). Marketing hero may **seed** estimate fields only.
 

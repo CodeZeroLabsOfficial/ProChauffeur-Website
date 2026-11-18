@@ -35,12 +35,15 @@ export function EstimateTripFields({ className }: { className?: string }) {
   const setDropoff = useBookingStore((s) => s.setDropoff);
   const serviceType = useBookingStore((s) => s.serviceType);
   const itinerary = useBookingStore((s) => s.itinerary);
+  const setItinerary = useBookingStore((s) => s.setItinerary);
   const scheduledPickupAt = useBookingStore((s) => s.scheduledPickupAt);
   const setScheduledPickupAt = useBookingStore((s) => s.setScheduledPickupAt);
   const scheduledReturnAt = useBookingStore((s) => s.scheduledReturnAt);
   const setScheduledReturnAt = useBookingStore((s) => s.setScheduledReturnAt);
   const hourlyHours = useBookingStore((s) => s.hourlyHours);
   const setHourlyHours = useBookingStore((s) => s.setHourlyHours);
+  const passengers = useBookingStore((s) => s.passengers);
+  const setPassengers = useBookingStore((s) => s.setPassengers);
   const mapboxCountry = useBookingStore((s) => s.mapboxCountry);
   const mapboxProximity = useBookingStore((s) => s.mapboxProximity);
 
@@ -62,11 +65,19 @@ export function EstimateTripFields({ className }: { className?: string }) {
     }
   }
 
+  function handleItineraryChange(next: "oneWay" | "return") {
+    setItinerary(next);
+    if (next === "return" && !scheduledReturnAt) {
+      setScheduledReturnAt(defaultReturnDate(scheduledPickupAt));
+    }
+  }
+
   if (!hasMounted) {
     return (
       <div className={cn("flex items-center justify-center gap-2", className)} aria-hidden>
         <div className="border-white/15 h-9 w-56 border bg-black/25 sm:w-80 md:w-[28rem]" />
         <div className="border-white/15 hidden h-9 w-40 border bg-black/25 sm:block" />
+        <div className="border-white/15 hidden h-9 w-24 border bg-black/25 sm:block" />
       </div>
     );
   }
@@ -78,6 +89,7 @@ export function EstimateTripFields({ className }: { className?: string }) {
     isReturn && scheduledReturnAt
       ? format(scheduledReturnAt, "EEE d MMM HH:mm")
       : null;
+  const passengerLabel = `${passengers} pax`;
 
   return (
     <div className={cn("flex items-center justify-center gap-2", className)}>
@@ -157,11 +169,41 @@ export function EstimateTripFields({ className }: { className?: string }) {
               <span className="whitespace-nowrap">{returnLabel}</span>
             </>
           ) : null}
+          <span className="text-white/35" aria-hidden>
+            ·
+          </span>
+          <span className="whitespace-nowrap">{passengerLabel}</span>
         </PopoverTrigger>
         <PopoverContent
           align="center"
           className="dark w-[min(92vw,22rem)] border-white/10 bg-neutral-950 p-3 text-white ring-white/10">
           <div className="space-y-3">
+            {isTransfer ? (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleItineraryChange("oneWay")}
+                  className={cn(
+                    "border border-white/15 px-3 py-2 text-sm font-medium transition-colors",
+                    itinerary === "oneWay"
+                      ? "bg-white text-neutral-950"
+                      : "bg-transparent text-white hover:bg-white/10"
+                  )}>
+                  One-way
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleItineraryChange("return")}
+                  className={cn(
+                    "border border-white/15 px-3 py-2 text-sm font-medium transition-colors",
+                    itinerary === "return"
+                      ? "bg-white text-neutral-950"
+                      : "bg-transparent text-white hover:bg-white/10"
+                  )}>
+                  Return
+                </button>
+              </div>
+            ) : null}
             <HeroDateTimeField
               id="estimate-pickup-at"
               label="Pickup"
@@ -177,6 +219,23 @@ export function EstimateTripFields({ className }: { className?: string }) {
                 minDate={scheduledPickupAt}
               />
             ) : null}
+            <div>
+              <Label htmlFor="estimate-passengers" className="text-xs font-medium text-white/70">
+                Passengers
+              </Label>
+              <Input
+                id="estimate-passengers"
+                type="number"
+                min={1}
+                max={8}
+                value={passengers}
+                onChange={(e) => {
+                  const next = Number(e.target.value);
+                  setPassengers(Number.isFinite(next) ? Math.max(1, Math.min(8, next)) : 1);
+                }}
+                className="mt-1 h-9 border-white/15 bg-transparent text-white"
+              />
+            </div>
           </div>
         </PopoverContent>
       </Popover>

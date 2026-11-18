@@ -6,8 +6,6 @@ import { cn } from "@/lib/utils";
 
 const STEPS = [
   { id: "estimate", label: "Estimate" },
-  { id: "details", label: "Details" },
-  { id: "payment", label: "Payment" },
   { id: "summary", label: "Summary" }
 ] as const;
 

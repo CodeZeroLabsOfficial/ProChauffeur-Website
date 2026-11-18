@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getBookingCatalog, type OperatingMapboxContext } from "@/lib/booking/catalog";
 import type { SelectedPlace } from "@/lib/booking/booking-store";
+import { getBookingCatalog, type OperatingMapboxContext } from "@/lib/booking/catalog";
+import { clearBookingSession } from "@/lib/booking/booking-session";
 import { ensureAnonymousAuth } from "@/lib/firebase/ensure-anonymous";
 import type { BookableServiceType } from "@/lib/models/enums";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,7 @@ export function HeroBookingStrip() {
   const [scheduledReturnAt, setScheduledReturnAt] = useState(() =>
     defaultReturnDate(defaultPickupDate())
   );
+  const [passengers, setPassengers] = useState(1);
   const [thumb, setThumb] = useState({ left: 0, width: 0, ready: false });
   const [mapbox, setMapbox] = useState<OperatingMapboxContext>({
     country: null,
@@ -141,6 +143,8 @@ export function HeroBookingStrip() {
     if (isReturn) {
       params.set("scheduledReturnAt", scheduledReturnAt.toISOString());
     }
+    params.set("passengers", String(Math.max(1, Math.min(8, passengers || 1))));
+    clearBookingSession();
     router.push(`/booking?${params.toString()}`);
   }
 
@@ -296,8 +300,27 @@ export function HeroBookingStrip() {
             label="Pickup"
             value={scheduledPickupAt}
             onChange={handlePickupChange}
-            className={cn(dateTimeFieldClass, isReturn && "sm:border-r")}
+            className={cn(dateTimeFieldClass, "sm:border-r")}
           />
+
+          <div className={cn(dateTimeFieldClass, isReturn && "sm:border-r", "sm:w-[6.5rem]")}>
+            <Label htmlFor="hero-passengers" className="text-xs font-medium text-white/70">
+              Passengers
+            </Label>
+            <Input
+              id="hero-passengers"
+              name="passengers"
+              type="number"
+              min={1}
+              max={8}
+              value={passengers}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setPassengers(Number.isFinite(next) ? Math.max(1, Math.min(8, next)) : 1);
+              }}
+              className={fieldClass}
+            />
+          </div>
 
           {isReturn ? (
             <HeroDateTimeField

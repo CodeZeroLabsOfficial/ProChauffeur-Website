@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { AddonsList } from "@/components/booking/addons-list";
@@ -10,6 +10,7 @@ import { QuoteBreakdown } from "@/components/booking/quote-breakdown";
 import { RouteMap } from "@/components/booking/route-map";
 import { VehicleClassList } from "@/components/booking/vehicle-class-list";
 import { buttonVariants } from "@/components/ui/button";
+import { useCustomerSession } from "@/lib/auth/use-customer-session";
 import { useBookingStore } from "@/lib/booking/booking-store";
 import { formatMoney } from "@/lib/booking/quote-api";
 import { formatDistanceKm, formatDurationMinutes } from "@/lib/mapbox/directions";
@@ -24,11 +25,15 @@ type FareEstimateViewProps = {
     itinerary?: "oneWay" | "return";
     serviceType?: "transfer" | "hourly";
     hourlyHours?: number;
+    passengers?: number;
   };
 };
 
 export function FareEstimateView({ seed }: FareEstimateViewProps) {
+  const router = useRouter();
+  const { ready: sessionReady, isCustomer } = useCustomerSession();
   const bootstrap = useBookingStore((s) => s.bootstrap);
+  const persistSession = useBookingStore((s) => s.persistSession);
   const ready = useBookingStore((s) => s.ready);
   const bootError = useBookingStore((s) => s.bootError);
   const pickup = useBookingStore((s) => s.pickup);
@@ -50,6 +55,7 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
   const setSmallLuggage = useBookingStore((s) => s.setSmallLuggage);
   const setLargeLuggage = useBookingStore((s) => s.setLargeLuggage);
   const canProceedFromEstimate = useBookingStore((s) => s.canProceedFromEstimate);
+  const canProceedToSummary = useBookingStore((s) => s.canProceedToSummary);
 
   useEffect(() => {
     void bootstrap(seed);
@@ -59,7 +65,17 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
 
   const classes = bookableVehicleClasses();
   const selected = selectedVehicleClass();
-  const canContinue = canProceedFromEstimate();
+  const canContinue = canProceedFromEstimate() && canProceedToSummary();
+
+  function handleBookNow() {
+    if (!canContinue || !sessionReady) return;
+    persistSession();
+    if (!isCustomer) {
+      router.push(`/login?redirect=${encodeURIComponent("/booking/summary")}`);
+      return;
+    }
+    router.push("/booking/summary");
+  }
 
   if (bootError) {
     return (
@@ -199,17 +215,18 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
             </p>
           )}
 
-          <Link
-            href={canContinue ? "/booking/details" : "#"}
-            aria-disabled={!canContinue}
+          <button
+            type="button"
+            disabled={!canContinue || !sessionReady}
+            onClick={handleBookNow}
             className={cn(
               buttonVariants({ size: "lg" }),
               "hidden w-full justify-between lg:inline-flex",
-              !canContinue && "pointer-events-none opacity-45"
+              (!canContinue || !sessionReady) && "opacity-45"
             )}>
             <span>Book now</span>
             <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
-          </Link>
+          </button>
         </aside>
       </div>
 
@@ -218,17 +235,18 @@ export function FareEstimateView({ seed }: FareEstimateViewProps) {
           <p className="text-muted-foreground text-center text-xs">
             All amounts are estimates. Final fare is confirmed at booking.
           </p>
-          <Link
-            href={canContinue ? "/booking/details" : "#"}
-            aria-disabled={!canContinue}
+          <button
+            type="button"
+            disabled={!canContinue || !sessionReady}
+            onClick={handleBookNow}
             className={cn(
               buttonVariants({ size: "lg" }),
               "w-full justify-between",
-              !canContinue && "pointer-events-none opacity-45"
+              (!canContinue || !sessionReady) && "opacity-45"
             )}>
             <span>Book now</span>
             <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
-          </Link>
+          </button>
         </div>
       </div>
     </div>

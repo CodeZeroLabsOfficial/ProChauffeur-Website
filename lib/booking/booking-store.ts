@@ -2,6 +2,11 @@
 
 import { create } from "zustand";
 
+import {
+  loadBookingSession,
+  saveBookingSession,
+  type BookingSessionSnapshot
+} from "@/lib/booking/booking-session";
 import { getBookingCatalog } from "@/lib/booking/catalog";
 import { filterEligibleVehicleClasses } from "@/lib/booking/eligibility";
 import { buildTripQuoteRemote } from "@/lib/booking/quote-api";
@@ -68,7 +73,9 @@ type BookingStore = {
     itinerary?: "oneWay" | "return";
     serviceType?: BookableServiceType;
     hourlyHours?: number;
+    passengers?: number;
   }) => Promise<void>;
+  persistSession: () => void;
   setPickup: (place: SelectedPlace | null) => void;
   setDropoff: (place: SelectedPlace | null) => void;
   setScheduledPickupAt: (date: Date) => void;
@@ -86,8 +93,67 @@ type BookingStore = {
   bookableVehicleClasses: () => VehicleClass[];
   selectedVehicleClass: () => VehicleClass | null;
   canProceedFromEstimate: () => boolean;
-  canProceedFromDetails: () => boolean;
+  canProceedToSummary: () => boolean;
 };
+
+function snapshotFromState(state: {
+  pickup: SelectedPlace | null;
+  dropoff: SelectedPlace | null;
+  scheduledPickupAt: Date;
+  scheduledReturnAt: Date | null;
+  serviceType: BookableServiceType;
+  itinerary: "oneWay" | "return";
+  hourlyHours: number;
+  passengers: number;
+  smallLuggage: number;
+  largeLuggage: number;
+  selectedVehicleClassId: string | null;
+  selectedAddonIds: string[];
+}): BookingSessionSnapshot {
+  return {
+    pickup: state.pickup,
+    dropoff: state.dropoff,
+    scheduledPickupAt: state.scheduledPickupAt.toISOString(),
+    scheduledReturnAt: state.scheduledReturnAt?.toISOString() ?? null,
+    serviceType: state.serviceType,
+    itinerary: state.itinerary,
+    hourlyHours: state.hourlyHours,
+    passengers: state.passengers,
+    smallLuggage: state.smallLuggage,
+    largeLuggage: state.largeLuggage,
+    selectedVehicleClassId: state.selectedVehicleClassId,
+    selectedAddonIds: state.selectedAddonIds
+  };
+}
+
+function applySessionSnapshot(
+  snapshot: BookingSessionSnapshot,
+  set: (partial: Partial<BookingStore>) => void
+) {
+  const scheduledPickupAt = new Date(snapshot.scheduledPickupAt);
+  if (Number.isNaN(scheduledPickupAt.getTime())) return;
+
+  let scheduledReturnAt: Date | null = null;
+  if (snapshot.scheduledReturnAt) {
+    const parsed = new Date(snapshot.scheduledReturnAt);
+    if (!Number.isNaN(parsed.getTime())) scheduledReturnAt = parsed;
+  }
+
+  set({
+    pickup: snapshot.pickup,
+    dropoff: snapshot.dropoff,
+    scheduledPickupAt,
+    scheduledReturnAt,
+    serviceType: snapshot.serviceType,
+    itinerary: snapshot.itinerary,
+    hourlyHours: Math.max(1, snapshot.hourlyHours || 1),
+    passengers: Math.max(1, snapshot.passengers || 1),
+    smallLuggage: Math.max(0, snapshot.smallLuggage || 0),
+    largeLuggage: Math.max(0, snapshot.largeLuggage || 0),
+    selectedVehicleClassId: snapshot.selectedVehicleClassId,
+    selectedAddonIds: Array.isArray(snapshot.selectedAddonIds) ? snapshot.selectedAddonIds : []
+  });
+}
 
 function defaultPickupDate(): Date {
   const d = new Date();
@@ -225,6 +291,23 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         bootError: null
       });
 
+      const saved = loadBookingSession();
+      const hasUrlSeed = Boolean(
+        seed?.pickupText ||
+          seed?.dropoffText ||
+          seed?.scheduledPickupAt ||
+          seed?.scheduledReturnAt ||
+          seed?.passengers
+      );
+
+      if (saved && !hasUrlSeed) {
+        applySessionSnapshot(saved, set);
+        if (get().pickup && get().dropoff) {
+          void get().refreshRouteAndQuote();
+        }
+        return;
+      }
+
       if (seed?.serviceType === "transfer" || seed?.serviceType === "hourly") {
         set({ serviceType: seed.serviceType });
       }
@@ -235,6 +318,10 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       if (typeof seed?.hourlyHours === "number" && seed.hourlyHours > 0) {
         set({ hourlyHours: seed.hourlyHours });
+      }
+
+      if (typeof seed?.passengers === "number" && seed.passengers >= 1) {
+        set({ passengers: Math.min(8, Math.floor(seed.passengers)) });
       }
 
       if (seed?.scheduledPickupAt) {
@@ -267,6 +354,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         });
         if (dropoff) get().setDropoff(dropoff);
       }
+
+      get().persistSession();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Could not start booking. Check env and Auth.";
@@ -274,23 +363,31 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     }
   },
 
+  persistSession() {
+    saveBookingSession(snapshotFromState(get()));
+  },
+
   setPickup(place) {
     set({ pickup: place, quoteError: null });
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
   setDropoff(place) {
     set({ dropoff: place, quoteError: null });
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
   setScheduledPickupAt(date) {
     set({ scheduledPickupAt: date });
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
   setScheduledReturnAt(date) {
     set({ scheduledReturnAt: date });
+    get().persistSession();
   },
 
   setServiceType(serviceType) {
@@ -299,6 +396,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       itinerary: serviceType === "hourly" ? "oneWay" : get().itinerary,
       scheduledReturnAt: serviceType === "hourly" ? null : get().scheduledReturnAt
     });
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
@@ -308,28 +406,33 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       serviceType: "transfer",
       scheduledReturnAt: itinerary === "oneWay" ? null : get().scheduledReturnAt
     });
+    get().persistSession();
   },
 
   setHourlyHours(hours) {
     set({ hourlyHours: Math.max(1, hours) });
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
   setPassengers(count) {
     set({ passengers: Math.max(1, count) });
     reselectVehicleIfNeeded(get, set);
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
   setSmallLuggage(count) {
     set({ smallLuggage: Math.max(0, count) });
     reselectVehicleIfNeeded(get, set);
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
   setLargeLuggage(count) {
     set({ largeLuggage: Math.max(0, count) });
     reselectVehicleIfNeeded(get, set);
+    get().persistSession();
     void get().refreshRouteAndQuote();
   },
 
@@ -338,7 +441,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     return Boolean(state.quote && state.selectedVehicleClassId && state.pickup && state.dropoff);
   },
 
-  canProceedFromDetails() {
+  canProceedToSummary() {
     const state = get();
     if (!state.canProceedFromEstimate()) return false;
     if (!(state.scheduledPickupAt instanceof Date) || Number.isNaN(state.scheduledPickupAt.getTime())) {
@@ -370,12 +473,14 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       availableAddons,
       quote: cached ?? state.quote
     });
+    get().persistSession();
   },
 
   toggleAddon(id) {
     const current = get().selectedAddonIds;
     const next = current.includes(id) ? current.filter((row) => row !== id) : [...current, id];
     set({ selectedAddonIds: next });
+    get().persistSession();
     void get().refreshSelectedQuote();
   },
 

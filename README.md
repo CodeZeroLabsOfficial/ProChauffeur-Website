@@ -10,9 +10,9 @@ Customer-facing marketing site and booking funnel for the Elite Chauffeurs brand
 
 ## Booking funnel
 
-`/booking` → `/booking/details` → `/booking/payment` (email OTP) → `/booking/summary` (confirm + Stripe) → `/booking/confirmed`
+`/booking` (estimate) → `/login` if guest → `/booking/summary` (pay + confirm) → `/booking/confirmed`
 
-Guest fare estimate uses Anonymous Auth. Email OTP is required before payment and confirm.
+Guest fare estimate uses Anonymous Auth. Email OTP is required before Summary pay and confirm. Hero and estimate trip strip seed passengers; capacity filters vehicle classes.
 
 ## Getting started
 

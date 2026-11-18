@@ -2,15 +2,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { BookingChrome } from "@/components/booking/booking-chrome";
-import { StripePaymentForm } from "@/components/booking/stripe-payment-form";
+import {
+  BookingPaymentPanel,
+  type PaymentSelection
+} from "@/components/booking/booking-payment-panel";
+import { BookingStepsBar } from "@/components/booking/booking-chrome";
+import { QuoteBreakdown } from "@/components/booking/quote-breakdown";
+import { RouteMap } from "@/components/booking/route-map";
+import {
+  confirmSavedCardPayment,
+  type StripePaymentConfirmHandle
+} from "@/components/booking/stripe-payment-form";
 import { buttonVariants } from "@/components/ui/button";
 import { isEmailAuthenticatedUser } from "@/lib/auth/auth-otp";
 import { useBookingStore } from "@/lib/booking/booking-store";
+import { clearBookingSession } from "@/lib/booking/booking-session";
 import { buildTripPayloads } from "@/lib/booking/build-trip-payload";
 import {
   createTripCardPayment,
@@ -18,13 +27,14 @@ import {
 } from "@/lib/booking/create-trip-payment";
 import { formatMoney } from "@/lib/booking/quote-api";
 import { useBookingGuard } from "@/lib/booking/use-booking-guard";
-import { firebaseAuth } from "@/lib/firebase/client";
 import { getStripePublishableKey } from "@/lib/env";
+import { firebaseAuth } from "@/lib/firebase/client";
+import { formatDistanceKm, formatDurationMinutes } from "@/lib/mapbox/directions";
 import { cn } from "@/lib/utils";
 
 export function SummaryView() {
   const router = useRouter();
-  const allowed = useBookingGuard("details");
+  const allowed = useBookingGuard("summary");
   const bootstrap = useBookingStore((s) => s.bootstrap);
   const ready = useBookingStore((s) => s.ready);
 
@@ -39,16 +49,21 @@ export function SummaryView() {
   const smallLuggage = useBookingStore((s) => s.smallLuggage);
   const largeLuggage = useBookingStore((s) => s.largeLuggage);
   const quote = useBookingStore((s) => s.quote);
+  const route = useBookingStore((s) => s.route);
   const selectedAddonIds = useBookingStore((s) => s.selectedAddonIds);
   const availableAddons = useBookingStore((s) => s.availableAddons);
   const selectedVehicleClass = useBookingStore((s) => s.selectedVehicleClass);
 
   const [emailAuthed, setEmailAuthed] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [uid, setUid] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [tripId, setTripId] = useState<string | null>(null);
+  const [saveCard, setSaveCard] = useState(false);
+  const [selection, setSelection] = useState<PaymentSelection>({ mode: "new" });
+  const paymentFormRef = useRef<StripePaymentConfirmHandle | null>(null);
 
   useEffect(() => {
     if (!ready) void bootstrap();
@@ -57,6 +72,7 @@ export function SummaryView() {
   useEffect(() => {
     const unsub = onAuthStateChanged(firebaseAuth(), (user) => {
       setEmailAuthed(isEmailAuthenticatedUser(user));
+      setUid(user && isEmailAuthenticatedUser(user) ? user.uid : null);
       setAuthReady(true);
     });
     return () => unsub();
@@ -64,15 +80,24 @@ export function SummaryView() {
 
   useEffect(() => {
     if (authReady && !emailAuthed) {
-      router.replace("/booking/payment");
+      router.replace(`/login?redirect=${encodeURIComponent("/booking/summary")}`);
     }
   }, [authReady, emailAuthed, router]);
 
-  async function handleStartPayment() {
+  useEffect(() => {
+    setClientSecret(null);
+    setTripId(null);
+  }, [selection]);
+
+  async function handleBookNow() {
     const user = firebaseAuth().currentUser;
     const vehicleClass = selectedVehicleClass();
     if (!user || !isEmailAuthenticatedUser(user) || !pickup || !dropoff || !quote || !vehicleClass) {
       setError("Booking is incomplete. Return to the fare estimate.");
+      return;
+    }
+    if (!getStripePublishableKey()) {
+      setError("Card checkout is not configured for this environment.");
       return;
     }
 
@@ -101,158 +126,169 @@ export function SummaryView() {
         quote
       });
 
-      const payment = await createTripCardPayment({ trips });
-      setTripId(payment.tripId);
-      setClientSecret(payment.clientSecret);
+      if (selection.mode === "saved") {
+        const payment = await createTripCardPayment({
+          trips,
+          paymentMethodId: selection.paymentMethodId
+        });
+        setTripId(payment.tripId);
+        const confirmed = await confirmSavedCardPayment({
+          clientSecret: payment.clientSecret,
+          paymentMethodId: selection.paymentMethodId
+        });
+        if (!confirmed.ok) {
+          setError(confirmed.message);
+          return;
+        }
+        clearBookingSession();
+        router.push(`/booking/confirmed?tripId=${encodeURIComponent(payment.tripId)}`);
+        return;
+      }
+
+      if (!clientSecret) {
+        const payment = await createTripCardPayment({
+          trips,
+          saveCard
+        });
+        setClientSecret(payment.clientSecret);
+        setTripId(payment.tripId);
+        return;
+      }
+
+      const confirmed = await paymentFormRef.current?.confirm();
+      if (!confirmed) {
+        if (!paymentFormRef.current) {
+          setError("Enter your card details, then press Book now again.");
+        }
+        return;
+      }
+      clearBookingSession();
+      router.push(
+        tripId
+          ? `/booking/confirmed?tripId=${encodeURIComponent(tripId)}`
+          : "/booking/confirmed"
+      );
     } catch (err) {
-      setError(err instanceof TripPaymentError ? err.message : "Could not start payment.");
+      setError(err instanceof TripPaymentError ? err.message : "Could not complete payment.");
     } finally {
       setBusy(false);
     }
   }
 
-  if (!allowed || !authReady || !emailAuthed) {
+  if (!allowed || !authReady || !emailAuthed || !uid) {
     return (
-      <BookingChrome step="summary">
+      <div className="space-y-3 pt-3">
+        <BookingStepsBar step="summary" className="border-border border-b py-1.5" />
         <p className="text-muted-foreground text-sm">Preparing summary…</p>
-      </BookingChrome>
+      </div>
     );
   }
 
   const vehicleClass = selectedVehicleClass();
-  const stripeConfigured = Boolean(getStripePublishableKey());
   const returnTotalHint =
     serviceType === "transfer" && itinerary === "return"
       ? "Return trip fare is recomputed at confirmation."
       : null;
 
   return (
-    <BookingChrome step="summary">
-      <div className="pb-28">
-        <div className="mb-8 space-y-2">
-          <p className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
-            Summary
-          </p>
-          <h1 className="font-heading text-4xl tracking-tight">Confirm your trip</h1>
-          <p className="text-muted-foreground max-w-xl text-sm text-balance">
-            Review the details below. Amounts are estimates until booking confirms.
-          </p>
+    <div className="pb-28 lg:pb-8">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
+        <div className="min-w-0">
+          <div className="border-border bg-background sticky top-16 z-30 border-b py-1.5">
+            <BookingStepsBar step="summary" />
+          </div>
+          <div className="pt-3">
+            <BookingPaymentPanel
+              uid={uid}
+              clientSecret={clientSecret}
+              saveCard={saveCard}
+              onSaveCardChange={setSaveCard}
+              selection={selection}
+              onSelectionChange={setSelection}
+              paymentFormRef={paymentFormRef}
+              onPaymentError={setError}
+            />
+            {error ? <p className="text-destructive mt-4 text-sm">{error}</p> : null}
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <section className="border-border space-y-3 border p-5 text-sm">
-            <h2 className="text-base font-medium">Journey</h2>
-            <p>
-              <span className="text-muted-foreground">Pickup</span>
-              <br />
-              {pickup?.addressLine}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Drop-off</span>
-              <br />
-              {dropoff?.addressLine}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Pickup time</span>
-              <br />
-              {format(scheduledPickupAt, "EEE d MMM yyyy HH:mm")}
-            </p>
-            {scheduledReturnAt && itinerary === "return" ? (
-              <p>
-                <span className="text-muted-foreground">Return time</span>
-                <br />
-                {format(scheduledReturnAt, "EEE d MMM yyyy HH:mm")}
-              </p>
-            ) : null}
-            <p>
-              <span className="text-muted-foreground">Trip</span>
-              <br />
-              {serviceType === "hourly"
-                ? `Hourly · ${hourlyHours}h`
-                : itinerary === "return"
-                  ? "Transfer · Return"
-                  : "Transfer · One-way"}
-            </p>
-          </section>
+        <aside
+          className={cn(
+            "border-border bg-background space-y-5 border p-4",
+            "lg:mt-10 lg:sticky lg:top-[6.5rem]"
+          )}>
+          <RouteMap
+            pickup={pickup?.coordinate ?? null}
+            dropoff={dropoff?.coordinate ?? null}
+            geometry={route?.geometry ?? null}
+          />
 
-          <section className="border-border space-y-3 border p-5 text-sm">
-            <h2 className="text-base font-medium">Party</h2>
-            <p>
-              {passengers} passenger{passengers === 1 ? "" : "s"} · {smallLuggage} small /{" "}
-              {largeLuggage} large luggage
-            </p>
-            <p>{vehicleClass?.displayName ?? "Vehicle class"}</p>
-            {selectedAddonIds.length > 0 ? (
-              <p>
-                Add-ons:{" "}
-                {availableAddons
-                  .filter((addon) => selectedAddonIds.includes(addon.id))
-                  .map((addon) => addon.title)
-                  .join(", ")}
+          <div className="flex items-start justify-between gap-3">
+            {vehicleClass ? (
+              <p className="font-medium">{vehicleClass.displayName}</p>
+            ) : (
+              <p className="text-muted-foreground text-sm">Vehicle class</p>
+            )}
+            {route ? (
+              <p className="text-muted-foreground shrink-0 text-sm">
+                {formatDistanceKm(route.distanceMeters)} ·{" "}
+                {formatDurationMinutes(route.durationSeconds)}
               </p>
             ) : null}
-          </section>
+          </div>
 
           {quote ? (
-            <section className="border-border space-y-2 border p-5 text-sm">
-              <h2 className="text-base font-medium">Fare</h2>
-              <p className="font-heading text-2xl tracking-tight">
-                {formatMoney(quote.displayTotal, quote.currencyCode)}
-              </p>
+            <>
+              <QuoteBreakdown quote={quote} />
               <p className="text-muted-foreground text-xs">
                 Estimate only. Final fare is confirmed at booking.
                 {returnTotalHint ? ` ${returnTotalHint}` : ""}
               </p>
-            </section>
+            </>
           ) : null}
 
-          {error ? <p className="text-destructive text-sm">{error}</p> : null}
+          <Link
+            href="/booking"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "hidden w-full lg:inline-flex")}>
+            Back to estimate
+          </Link>
 
-          {clientSecret ? (
-            <section className="border-border space-y-4 border p-5">
-              <h2 className="text-base font-medium">Card payment</h2>
-              {stripeConfigured ? (
-                <StripePaymentForm
-                  clientSecret={clientSecret}
-                  onPaid={() =>
-                    router.push(
-                      tripId
-                        ? `/booking/confirmed?tripId=${encodeURIComponent(tripId)}`
-                        : "/booking/confirmed"
-                    )
-                  }
-                  onError={setError}
-                />
-              ) : (
-                <p className="text-sm">
-                  Payment intent created{tripId ? ` for trip ${tripId}` : ""}, but Stripe is not
-                  configured in this environment. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to finish
-                  checkout.
-                </p>
-              )}
-            </section>
-          ) : null}
-        </div>
-
-        {!clientSecret ? (
-          <div className="border-border bg-background fixed inset-x-0 bottom-0 border-t px-4 py-4">
-            <div className="mx-auto flex max-w-3xl gap-3">
-              <Link
-                href="/booking/payment"
-                className={cn(buttonVariants({ variant: "outline", size: "lg" }), "flex-1")}>
-                Back
-              </Link>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => void handleStartPayment()}
-                className={cn(buttonVariants({ size: "lg" }), "flex-1")}>
-                {busy ? "Starting…" : "Confirm and pay"}
-              </button>
-            </div>
-          </div>
-        ) : null}
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleBookNow()}
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "hidden w-full justify-between lg:inline-flex",
+              busy && "opacity-45"
+            )}>
+            <span>{busy ? "Booking…" : "Book now"}</span>
+            <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
+          </button>
+        </aside>
       </div>
-    </BookingChrome>
+
+      <div className="border-border bg-background fixed inset-x-0 bottom-0 border-t px-4 py-4 lg:hidden">
+        <div className="mx-auto flex max-w-6xl gap-3">
+          <Link
+            href="/booking"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "flex-1")}>
+            Back
+          </Link>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleBookNow()}
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "flex-1 justify-between",
+              busy && "opacity-45"
+            )}>
+            <span>{busy ? "Booking…" : "Book now"}</span>
+            <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

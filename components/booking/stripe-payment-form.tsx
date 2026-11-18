@@ -7,9 +7,14 @@ import {
   useStripe
 } from "@stripe/react-stripe-js";
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
-import { useMemo, useState } from "react";
+import {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useState,
+  type ReactNode
+} from "react";
 
-import { Button } from "@/components/ui/button";
 import { getStripePublishableKey } from "@/lib/env";
 
 let stripePromise: Promise<Stripe | null> | null = null;
@@ -21,71 +26,100 @@ function getStripe() {
   return stripePromise;
 }
 
-type StripePaymentFormProps = {
-  clientSecret: string;
-  onPaid: () => void;
-  onError: (message: string) => void;
+export type StripePaymentConfirmHandle = {
+  confirm: () => Promise<boolean>;
 };
 
-function ConfirmPaymentInner({
-  onPaid,
-  onError
-}: {
-  onPaid: () => void;
+type StripePaymentFieldsProps = {
   onError: (message: string) => void;
-}) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [busy, setBusy] = useState(false);
+  children?: ReactNode;
+};
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (!stripe || !elements) return;
-    setBusy(true);
-    try {
-      const result = await stripe.confirmPayment({
-        elements,
-        redirect: "if_required",
-        confirmParams: {
-          return_url: `${window.location.origin}/booking/confirmed`
+const StripePaymentFields = forwardRef<StripePaymentConfirmHandle, StripePaymentFieldsProps>(
+  function StripePaymentFields({ onError, children }, ref) {
+    const stripe = useStripe();
+    const elements = useElements();
+    const [ready, setReady] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+      async confirm() {
+        if (!stripe || !elements) {
+          onError("Card form is not ready yet.");
+          return false;
         }
-      });
-      if (result.error) {
-        onError(result.error.message || "Payment failed.");
-        return;
+        const result = await stripe.confirmPayment({
+          elements,
+          redirect: "if_required",
+          confirmParams: {
+            return_url: `${window.location.origin}/booking/confirmed`
+          }
+        });
+        if (result.error) {
+          onError(result.error.message || "Payment failed.");
+          return false;
+        }
+        return true;
       }
-      onPaid();
-    } catch (error) {
-      onError(error instanceof Error ? error.message : "Payment failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
+    }));
 
-  return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
-      <PaymentElement />
-      <Button type="submit" size="lg" className="w-full" disabled={!stripe || busy}>
-        {busy ? "Processing…" : "Pay and confirm"}
-      </Button>
-    </form>
-  );
-}
-
-export function StripePaymentForm({ clientSecret, onPaid, onError }: StripePaymentFormProps) {
-  const stripe = useMemo(() => getStripe(), []);
-
-  if (!stripe) {
     return (
-      <p className="text-destructive text-sm">
-        Card checkout is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to enable payment.
-      </p>
+      <div className="space-y-4">
+        <PaymentElement onReady={() => setReady(true)} />
+        {!ready ? (
+          <p className="text-muted-foreground text-sm">Loading card form…</p>
+        ) : null}
+        {children}
+      </div>
     );
   }
+);
 
-  return (
-    <Elements stripe={stripe} options={{ clientSecret }}>
-      <ConfirmPaymentInner onPaid={onPaid} onError={onError} />
-    </Elements>
-  );
+type StripePaymentFormProps = {
+  clientSecret: string;
+  onError: (message: string) => void;
+  children?: ReactNode;
+};
+
+export const StripePaymentForm = forwardRef<StripePaymentConfirmHandle, StripePaymentFormProps>(
+  function StripePaymentForm({ clientSecret, onError, children }, ref) {
+    const stripe = useMemo(() => getStripe(), []);
+
+    if (!stripe) {
+      return (
+        <p className="text-destructive text-sm">
+          Card checkout is not configured. Add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to enable payment.
+        </p>
+      );
+    }
+
+    return (
+      <Elements stripe={stripe} options={{ clientSecret }}>
+        <StripePaymentFields ref={ref} onError={onError}>
+          {children}
+        </StripePaymentFields>
+      </Elements>
+    );
+  }
+);
+
+export async function confirmSavedCardPayment(input: {
+  clientSecret: string;
+  paymentMethodId: string;
+}): Promise<{ ok: true } | { ok: false; message: string }> {
+  const stripe = await getStripe();
+  if (!stripe) {
+    return { ok: false, message: "Card checkout is not configured." };
+  }
+  const result = await stripe.confirmPayment({
+    clientSecret: input.clientSecret,
+    confirmParams: {
+      payment_method: input.paymentMethodId,
+      return_url: `${window.location.origin}/booking/confirmed`
+    },
+    redirect: "if_required"
+  });
+  if (result.error) {
+    return { ok: false, message: result.error.message || "Payment failed." };
+  }
+  return { ok: true };
 }
