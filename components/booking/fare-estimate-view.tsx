@@ -26,6 +26,8 @@ type FareEstimateViewProps = {
     serviceType?: "transfer" | "hourly";
     hourlyHours?: number;
     passengers?: number;
+    adults?: number;
+    children?: number;
   };
 };
 

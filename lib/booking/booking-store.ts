@@ -48,6 +48,8 @@ type BookingStore = {
   itinerary: "oneWay" | "return";
   hourlyHours: number;
   passengers: number;
+  adults: number;
+  children: number;
   smallLuggage: number;
   largeLuggage: number;
 
@@ -74,6 +76,8 @@ type BookingStore = {
     serviceType?: BookableServiceType;
     hourlyHours?: number;
     passengers?: number;
+    adults?: number;
+    children?: number;
   }) => Promise<void>;
   persistSession: () => void;
   setPickup: (place: SelectedPlace | null) => void;
@@ -84,6 +88,9 @@ type BookingStore = {
   setItinerary: (itinerary: "oneWay" | "return") => void;
   setHourlyHours: (hours: number) => void;
   setPassengers: (count: number) => void;
+  setAdults: (count: number) => void;
+  setChildren: (count: number) => void;
+  setPassengerCounts: (adults: number, children: number) => void;
   setSmallLuggage: (count: number) => void;
   setLargeLuggage: (count: number) => void;
   selectVehicleClass: (id: string) => void;
@@ -105,6 +112,8 @@ function snapshotFromState(state: {
   itinerary: "oneWay" | "return";
   hourlyHours: number;
   passengers: number;
+  adults: number;
+  children: number;
   smallLuggage: number;
   largeLuggage: number;
   selectedVehicleClassId: string | null;
@@ -119,6 +128,8 @@ function snapshotFromState(state: {
     itinerary: state.itinerary,
     hourlyHours: state.hourlyHours,
     passengers: state.passengers,
+    adults: state.adults,
+    children: state.children,
     smallLuggage: state.smallLuggage,
     largeLuggage: state.largeLuggage,
     selectedVehicleClassId: state.selectedVehicleClassId,
@@ -139,6 +150,8 @@ function applySessionSnapshot(
     if (!Number.isNaN(parsed.getTime())) scheduledReturnAt = parsed;
   }
 
+  const adults = Math.max(1, snapshot.adults || 1);
+  const children = Math.max(0, snapshot.children || 0);
   set({
     pickup: snapshot.pickup,
     dropoff: snapshot.dropoff,
@@ -147,12 +160,24 @@ function applySessionSnapshot(
     serviceType: snapshot.serviceType,
     itinerary: snapshot.itinerary,
     hourlyHours: Math.max(1, snapshot.hourlyHours || 1),
-    passengers: Math.max(1, snapshot.passengers || 1),
+    adults,
+    children,
+    passengers: Math.max(1, adults + children),
     smallLuggage: Math.max(0, snapshot.smallLuggage || 0),
     largeLuggage: Math.max(0, snapshot.largeLuggage || 0),
     selectedVehicleClassId: snapshot.selectedVehicleClassId,
     selectedAddonIds: Array.isArray(snapshot.selectedAddonIds) ? snapshot.selectedAddonIds : []
   });
+}
+
+function clampPassengerCounts(adults: number, children: number, maxTotal = 8) {
+  const nextAdults = Math.max(1, Math.min(maxTotal, Math.floor(adults) || 1));
+  const nextChildren = Math.max(0, Math.min(maxTotal - nextAdults, Math.floor(children) || 0));
+  return {
+    adults: nextAdults,
+    children: nextChildren,
+    passengers: nextAdults + nextChildren
+  };
 }
 
 function defaultPickupDate(): Date {
@@ -246,6 +271,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   itinerary: "oneWay",
   hourlyHours: 3,
   passengers: 1,
+  adults: 1,
+  children: 0,
   smallLuggage: 0,
   largeLuggage: 0,
 
@@ -297,7 +324,9 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
           seed?.dropoffText ||
           seed?.scheduledPickupAt ||
           seed?.scheduledReturnAt ||
-          seed?.passengers
+          seed?.passengers ||
+          seed?.adults ||
+          seed?.children
       );
 
       if (saved && !hasUrlSeed) {
@@ -320,8 +349,20 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         set({ hourlyHours: seed.hourlyHours });
       }
 
-      if (typeof seed?.passengers === "number" && seed.passengers >= 1) {
-        set({ passengers: Math.min(8, Math.floor(seed.passengers)) });
+      if (
+        typeof seed?.adults === "number" ||
+        typeof seed?.children === "number" ||
+        (typeof seed?.passengers === "number" && seed.passengers >= 1)
+      ) {
+        const adults =
+          typeof seed.adults === "number" && seed.adults >= 1
+            ? seed.adults
+            : typeof seed.passengers === "number" && seed.passengers >= 1
+              ? seed.passengers
+              : 1;
+        const children =
+          typeof seed.children === "number" && seed.children >= 0 ? seed.children : 0;
+        set(clampPassengerCounts(adults, children));
       }
 
       if (seed?.scheduledPickupAt) {
@@ -416,7 +457,28 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   },
 
   setPassengers(count) {
-    set({ passengers: Math.max(1, count) });
+    set(clampPassengerCounts(count, 0));
+    reselectVehicleIfNeeded(get, set);
+    get().persistSession();
+    void get().refreshRouteAndQuote();
+  },
+
+  setAdults(count) {
+    set(clampPassengerCounts(count, get().children));
+    reselectVehicleIfNeeded(get, set);
+    get().persistSession();
+    void get().refreshRouteAndQuote();
+  },
+
+  setChildren(count) {
+    set(clampPassengerCounts(get().adults, count));
+    reselectVehicleIfNeeded(get, set);
+    get().persistSession();
+    void get().refreshRouteAndQuote();
+  },
+
+  setPassengerCounts(adults, children) {
+    set(clampPassengerCounts(adults, children));
     reselectVehicleIfNeeded(get, set);
     get().persistSession();
     void get().refreshRouteAndQuote();

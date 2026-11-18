@@ -6,9 +6,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { AddressSearchField } from "@/components/booking/address-search-field";
 import { HeroDateTimeField } from "@/components/marketing/hero-date-time-field";
+import { HeroHoursField } from "@/components/marketing/hero-hours-field";
+import { HeroPassengersField } from "@/components/marketing/hero-passengers-field";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { SelectedPlace } from "@/lib/booking/booking-store";
 import { getBookingCatalog, type OperatingMapboxContext } from "@/lib/booking/catalog";
@@ -32,9 +32,6 @@ function defaultReturnDate(pickup: Date) {
   return d;
 }
 
-const fieldClass =
-  "h-auto border-0 bg-transparent px-0 py-1 text-sm font-medium text-white shadow-none placeholder:text-white/45 focus-visible:ring-0 dark:bg-transparent";
-
 const pillClass =
   "relative z-10 inline-flex h-9 items-center justify-center gap-1 rounded-full px-4 text-sm font-medium transition-colors duration-300";
 
@@ -53,12 +50,13 @@ export function HeroBookingStrip() {
   const [dropoff, setDropoff] = useState<SelectedPlace | null>(null);
   const [pickupText, setPickupText] = useState("");
   const [dropoffText, setDropoffText] = useState("");
-  const [hourlyHours, setHourlyHours] = useState("3");
+  const [hourlyHours, setHourlyHours] = useState(3);
   const [scheduledPickupAt, setScheduledPickupAt] = useState(defaultPickupDate);
   const [scheduledReturnAt, setScheduledReturnAt] = useState(() =>
     defaultReturnDate(defaultPickupDate())
   );
-  const [passengers, setPassengers] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
   const [thumb, setThumb] = useState({ left: 0, width: 0, ready: false });
   const [mapbox, setMapbox] = useState<OperatingMapboxContext>({
     country: null,
@@ -138,12 +136,16 @@ export function HeroBookingStrip() {
     const dropoffValue = (dropoff?.addressLine || dropoffText).trim();
     if (pickupValue) params.set("pickup", pickupValue);
     if (isTransfer && dropoffValue) params.set("dropoff", dropoffValue);
-    if (!isTransfer) params.set("hourlyHours", hourlyHours);
+    if (!isTransfer) params.set("hourlyHours", String(hourlyHours));
     params.set("scheduledPickupAt", scheduledPickupAt.toISOString());
     if (isReturn) {
       params.set("scheduledReturnAt", scheduledReturnAt.toISOString());
     }
-    params.set("passengers", String(Math.max(1, Math.min(8, passengers || 1))));
+    const nextAdults = Math.max(1, adults);
+    const nextChildren = Math.max(0, children);
+    params.set("adults", String(nextAdults));
+    params.set("children", String(nextChildren));
+    params.set("passengers", String(nextAdults + nextChildren));
     clearBookingSession();
     router.push(`/booking?${params.toString()}`);
   }
@@ -278,21 +280,12 @@ export function HeroBookingStrip() {
               className={addressFieldClass}
             />
           ) : (
-            <div className={addressFieldClass}>
-              <Label htmlFor="hero-hours" className="text-xs font-medium text-white/70">
-                Hours
-              </Label>
-              <Input
-                id="hero-hours"
-                name="hourlyHours"
-                type="number"
-                min={1}
-                max={24}
-                value={hourlyHours}
-                onChange={(e) => setHourlyHours(e.target.value)}
-                className={fieldClass}
-              />
-            </div>
+            <HeroHoursField
+              id="hero-hours"
+              value={hourlyHours}
+              onChange={setHourlyHours}
+              className={addressFieldClass}
+            />
           )}
 
           <HeroDateTimeField
@@ -303,24 +296,16 @@ export function HeroBookingStrip() {
             className={cn(dateTimeFieldClass, "sm:border-r")}
           />
 
-          <div className={cn(dateTimeFieldClass, isReturn && "sm:border-r", "sm:w-[6.5rem]")}>
-            <Label htmlFor="hero-passengers" className="text-xs font-medium text-white/70">
-              Passengers
-            </Label>
-            <Input
-              id="hero-passengers"
-              name="passengers"
-              type="number"
-              min={1}
-              max={8}
-              value={passengers}
-              onChange={(e) => {
-                const next = Number(e.target.value);
-                setPassengers(Number.isFinite(next) ? Math.max(1, Math.min(8, next)) : 1);
-              }}
-              className={fieldClass}
-            />
-          </div>
+          <HeroPassengersField
+            id="hero-passengers"
+            adults={adults}
+            childCount={children}
+            onChange={({ adults: nextAdults, childCount }) => {
+              setAdults(nextAdults);
+              setChildren(childCount);
+            }}
+            className={cn(dateTimeFieldClass, isReturn && "sm:border-r", "sm:w-[9.5rem]")}
+          />
 
           {isReturn ? (
             <HeroDateTimeField

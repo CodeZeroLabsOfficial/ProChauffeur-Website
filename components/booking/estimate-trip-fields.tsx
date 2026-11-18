@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 
 import { AddressSearchField } from "@/components/booking/address-search-field";
 import { HeroDateTimeField } from "@/components/marketing/hero-date-time-field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { HeroHoursField } from "@/components/marketing/hero-hours-field";
+import { HeroPassengersField } from "@/components/marketing/hero-passengers-field";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBookingStore } from "@/lib/booking/booking-store";
 import { cn } from "@/lib/utils";
@@ -42,8 +42,10 @@ export function EstimateTripFields({ className }: { className?: string }) {
   const setScheduledReturnAt = useBookingStore((s) => s.setScheduledReturnAt);
   const hourlyHours = useBookingStore((s) => s.hourlyHours);
   const setHourlyHours = useBookingStore((s) => s.setHourlyHours);
+  const adults = useBookingStore((s) => s.adults);
+  const children = useBookingStore((s) => s.children);
   const passengers = useBookingStore((s) => s.passengers);
-  const setPassengers = useBookingStore((s) => s.setPassengers);
+  const setPassengerCounts = useBookingStore((s) => s.setPassengerCounts);
   const mapboxCountry = useBookingStore((s) => s.mapboxCountry);
   const mapboxProximity = useBookingStore((s) => s.mapboxProximity);
 
@@ -139,20 +141,11 @@ export function EstimateTripFields({ className }: { className?: string }) {
                 proximity={pickup?.coordinate ?? mapboxProximity}
               />
             ) : (
-              <div>
-                <Label htmlFor="estimate-hours" className="text-xs font-medium text-white/70">
-                  Hours
-                </Label>
-                <Input
-                  id="estimate-hours"
-                  type="number"
-                  min={1}
-                  max={24}
-                  value={hourlyHours}
-                  onChange={(e) => setHourlyHours(Number(e.target.value) || 1)}
-                  className="mt-1 h-9 border-white/15 bg-transparent text-white"
-                />
-              </div>
+              <HeroHoursField
+                id="estimate-hours"
+                value={hourlyHours}
+                onChange={setHourlyHours}
+              />
             )}
           </div>
         </PopoverContent>
@@ -219,23 +212,14 @@ export function EstimateTripFields({ className }: { className?: string }) {
                 minDate={scheduledPickupAt}
               />
             ) : null}
-            <div>
-              <Label htmlFor="estimate-passengers" className="text-xs font-medium text-white/70">
-                Passengers
-              </Label>
-              <Input
-                id="estimate-passengers"
-                type="number"
-                min={1}
-                max={8}
-                value={passengers}
-                onChange={(e) => {
-                  const next = Number(e.target.value);
-                  setPassengers(Number.isFinite(next) ? Math.max(1, Math.min(8, next)) : 1);
-                }}
-                className="mt-1 h-9 border-white/15 bg-transparent text-white"
-              />
-            </div>
+            <HeroPassengersField
+              id="estimate-passengers"
+              adults={adults}
+              childCount={children}
+              onChange={({ adults: nextAdults, childCount }) =>
+                setPassengerCounts(nextAdults, childCount)
+              }
+            />
           </div>
         </PopoverContent>
       </Popover>

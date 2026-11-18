@@ -12,6 +12,8 @@ export type BookingSessionSnapshot = {
   itinerary: "oneWay" | "return";
   hourlyHours: number;
   passengers: number;
+  adults: number;
+  children: number;
   smallLuggage: number;
   largeLuggage: number;
   selectedVehicleClassId: string | null;
@@ -36,12 +38,32 @@ export function loadBookingSession(): BookingSessionSnapshot | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as BookingSessionSnapshot;
+    const parsed = JSON.parse(raw) as Partial<BookingSessionSnapshot>;
     if (!parsed || typeof parsed !== "object") return null;
     if (typeof parsed.scheduledPickupAt !== "string") return null;
     if (parsed.serviceType !== "transfer" && parsed.serviceType !== "hourly") return null;
     if (parsed.itinerary !== "oneWay" && parsed.itinerary !== "return") return null;
-    return parsed;
+
+    const passengers = Math.max(1, Number(parsed.passengers) || 1);
+    const adults = Math.max(1, Number(parsed.adults) || passengers);
+    const children = Math.max(0, Number(parsed.children) || 0);
+
+    return {
+      pickup: parsed.pickup ?? null,
+      dropoff: parsed.dropoff ?? null,
+      scheduledPickupAt: parsed.scheduledPickupAt,
+      scheduledReturnAt: parsed.scheduledReturnAt ?? null,
+      serviceType: parsed.serviceType,
+      itinerary: parsed.itinerary,
+      hourlyHours: Math.max(1, Number(parsed.hourlyHours) || 1),
+      passengers: Math.max(passengers, adults + children),
+      adults,
+      children,
+      smallLuggage: Math.max(0, Number(parsed.smallLuggage) || 0),
+      largeLuggage: Math.max(0, Number(parsed.largeLuggage) || 0),
+      selectedVehicleClassId: parsed.selectedVehicleClassId ?? null,
+      selectedAddonIds: Array.isArray(parsed.selectedAddonIds) ? parsed.selectedAddonIds : []
+    };
   } catch {
     return null;
   }
