@@ -56,6 +56,7 @@ export async function createTripCardPayment(input: {
       trips: BookingTripPayload[];
       providerMethodId?: string | null;
       saveCard?: boolean;
+      channel: "web";
     },
     PaymentsCreateCardPaymentResponse
   >(firebaseFunctions(), "paymentsCreateCardPayment");
@@ -64,7 +65,8 @@ export async function createTripCardPayment(input: {
     const result = await callable({
       trips: input.trips,
       providerMethodId: input.paymentMethodId ?? null,
-      saveCard: Boolean(input.saveCard)
+      saveCard: Boolean(input.saveCard),
+      channel: "web"
     });
     const data = result.data;
     const clientSecret = data?.clientSecret?.trim() ?? "";

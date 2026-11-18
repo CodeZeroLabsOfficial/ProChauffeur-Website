@@ -48,8 +48,8 @@ export type BookingTripPayload = {
     quoteBreakdown: QuoteResult["breakdown"];
   };
   billing: {
-    paymentStatus: "pending";
-    paymentSource: "web";
+    status: "pending";
+    channel: "web";
     corporateAccountId: null;
   };
   driver: Record<string, never>;
@@ -159,8 +159,8 @@ function legPayload(
       quoteBreakdown: input.quote.breakdown
     },
     billing: {
-      paymentStatus: "pending",
-      paymentSource: "web",
+      status: "pending",
+      channel: "web",
       corporateAccountId: null
     },
     driver: {},
