@@ -64,7 +64,7 @@ export function MarketingInclusions() {
             Every detail considered.
           </h2>
           <p className="text-base text-white/70 text-balance sm:text-lg">
-            The small details that make the journey feel considered.
+            The small details that make every journey feel considered.
           </p>
         </header>
 

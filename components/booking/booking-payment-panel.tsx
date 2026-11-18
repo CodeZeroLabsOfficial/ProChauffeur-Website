@@ -78,12 +78,9 @@ export function BookingPaymentPanel({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="font-heading text-2xl tracking-tight sm:text-3xl">Confirm your trip</h2>
-        <p className="text-muted-foreground text-sm text-balance">
-          Choose how you will pay. Amounts are estimates until booking confirms.
-        </p>
-      </div>
+      <h2 className="font-heading text-2xl tracking-tight sm:text-3xl">
+        Confirm your reservation
+      </h2>
 
       <section className="space-y-3">
         <h3 className="text-lg font-medium">Payment</h3>
@@ -118,7 +115,9 @@ export function BookingPaymentPanel({
             <div className={cn(selectionClass(newSelected), "overflow-hidden")}>
               <button
                 type="button"
-                onClick={() => onSelectionChange({ mode: "new" })}
+                onClick={() => {
+                  if (!newSelected) onSelectionChange({ mode: "new" });
+                }}
                 className="w-full px-4 py-3 text-left">
                 <p className="font-medium">Pay with a new card</p>
                 <p className="text-muted-foreground mt-1 text-xs">
@@ -150,7 +149,7 @@ export function BookingPaymentPanel({
                     <p className="text-muted-foreground text-sm">
                       {isPreparingCard
                         ? "Preparing card form…"
-                        : "Could not load card form. Try selecting this option again."}
+                        : "Could not load card form. Check the message below, or select this option again."}
                     </p>
                   )}
                 </div>

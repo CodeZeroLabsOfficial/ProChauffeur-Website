@@ -53,6 +53,8 @@ export function SummaryView() {
   const selectedAddonIds = useBookingStore((s) => s.selectedAddonIds);
   const availableAddons = useBookingStore((s) => s.availableAddons);
   const selectedVehicleClass = useBookingStore((s) => s.selectedVehicleClass);
+  const selectedVehicleClassId = useBookingStore((s) => s.selectedVehicleClassId);
+  const vehicleClasses = useBookingStore((s) => s.vehicleClasses);
 
   const [emailAuthed, setEmailAuthed] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -86,16 +88,25 @@ export function SummaryView() {
     }
   }, [authReady, emailAuthed, router]);
 
+  const selectionKey =
+    selection.mode === "saved" ? `saved:${selection.paymentMethodId}` : "new";
+
   useEffect(() => {
     setClientSecret(null);
     setTripId(null);
-  }, [selection]);
+  }, [selectionKey, saveCard]);
 
   useEffect(() => {
     if (!allowed || !authReady || !emailAuthed) return;
     if (selection.mode !== "new") return;
     if (clientSecret) return;
-    if (!getStripePublishableKey()) return;
+
+    if (!getStripePublishableKey()) {
+      setError(
+        "Card checkout is not configured. Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY for this environment."
+      );
+      return;
+    }
 
     const user = firebaseAuth().currentUser;
     const vehicleClass = selectedVehicleClass();
@@ -141,11 +152,16 @@ export function SummaryView() {
         if (seq !== prepareSeq.current) return;
         setIsPreparingCard(false);
       });
+
+    return () => {
+      prepareSeq.current += 1;
+    };
   }, [
     allowed,
     authReady,
     emailAuthed,
-    selection,
+    selection.mode,
+    selectionKey,
     clientSecret,
     saveCard,
     pickup,
@@ -161,13 +177,13 @@ export function SummaryView() {
     largeLuggage,
     availableAddons,
     selectedAddonIds,
-    selectedVehicleClass
+    selectedVehicleClass,
+    selectedVehicleClassId,
+    vehicleClasses
   ]);
 
   function handleSaveCardChange(next: boolean) {
     setSaveCard(next);
-    setClientSecret(null);
-    setTripId(null);
   }
 
   async function handleBookNow() {
