@@ -13,7 +13,7 @@ import {
 import { ensureAnonymousAuth } from "@/lib/firebase/ensure-anonymous";
 import type { Branch } from "@/lib/models/branch";
 import type { CoordinateField } from "@/lib/models/coordinate";
-import type { TripType } from "@/lib/models/enums";
+import type { BookableServiceType } from "@/lib/models/enums";
 import type { PricingAddon } from "@/lib/models/pricing";
 import type { QuoteResult } from "@/lib/models/quote";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
@@ -39,7 +39,7 @@ type BookingStore = {
   dropoff: SelectedPlace | null;
   scheduledPickupAt: Date;
   scheduledReturnAt: Date | null;
-  tripType: TripType;
+  serviceType: BookableServiceType;
   itinerary: "oneWay" | "return";
   hourlyHours: number;
   passengers: number;
@@ -66,14 +66,14 @@ type BookingStore = {
     scheduledPickupAt?: string;
     scheduledReturnAt?: string;
     itinerary?: "oneWay" | "return";
-    tripType?: TripType;
+    serviceType?: BookableServiceType;
     hourlyHours?: number;
   }) => Promise<void>;
   setPickup: (place: SelectedPlace | null) => void;
   setDropoff: (place: SelectedPlace | null) => void;
   setScheduledPickupAt: (date: Date) => void;
   setScheduledReturnAt: (date: Date | null) => void;
-  setTripType: (tripType: TripType) => void;
+  setServiceType: (serviceType: BookableServiceType) => void;
   setItinerary: (itinerary: "oneWay" | "return") => void;
   setHourlyHours: (hours: number) => void;
   setPassengers: (count: number) => void;
@@ -125,11 +125,11 @@ async function resolvePlaceFromText(
 
 function filterAddonsForSelection(
   addons: PricingAddon[],
-  tripType: TripType,
+  serviceType: BookableServiceType,
   vehicleClassId: string | null
 ): PricingAddon[] {
   return addons.filter((addon) => {
-    if (!addon.tripTypes.includes(tripType)) return false;
+    if (!(addon.serviceTypes ?? []).includes(serviceType)) return false;
     if (addon.vehicleClassIds.length === 0) return true;
     return vehicleClassId ? addon.vehicleClassIds.includes(vehicleClassId) : false;
   });
@@ -176,7 +176,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   dropoff: null,
   scheduledPickupAt: defaultPickupDate(),
   scheduledReturnAt: null,
-  tripType: "transfer",
+  serviceType: "transfer",
   itinerary: "oneWay",
   hourlyHours: 3,
   passengers: 1,
@@ -199,7 +199,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   bookableVehicleClasses() {
     const state = get();
     return filterEligibleVehicleClasses(state.vehicleClasses, {
-      tripType: state.tripType,
+      serviceType: state.serviceType,
       passengers: state.passengers,
       smallLuggage: state.smallLuggage,
       largeLuggage: state.largeLuggage
@@ -225,8 +225,8 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         bootError: null
       });
 
-      if (seed?.tripType === "transfer" || seed?.tripType === "hourly") {
-        set({ tripType: seed.tripType });
+      if (seed?.serviceType === "transfer" || seed?.serviceType === "hourly") {
+        set({ serviceType: seed.serviceType });
       }
 
       if (seed?.itinerary === "return" || seed?.itinerary === "oneWay") {
@@ -247,7 +247,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
       if (seed?.scheduledReturnAt) {
         const parsed = new Date(seed.scheduledReturnAt);
         if (!Number.isNaN(parsed.getTime())) {
-          set({ scheduledReturnAt: parsed, itinerary: "return", tripType: "transfer" });
+          set({ scheduledReturnAt: parsed, itinerary: "return", serviceType: "transfer" });
         }
       }
 
@@ -293,11 +293,11 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     set({ scheduledReturnAt: date });
   },
 
-  setTripType(tripType) {
+  setServiceType(serviceType) {
     set({
-      tripType,
-      itinerary: tripType === "hourly" ? "oneWay" : get().itinerary,
-      scheduledReturnAt: tripType === "hourly" ? null : get().scheduledReturnAt
+      serviceType,
+      itinerary: serviceType === "hourly" ? "oneWay" : get().itinerary,
+      scheduledReturnAt: serviceType === "hourly" ? null : get().scheduledReturnAt
     });
     void get().refreshRouteAndQuote();
   },
@@ -305,7 +305,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
   setItinerary(itinerary) {
     set({
       itinerary,
-      tripType: "transfer",
+      serviceType: "transfer",
       scheduledReturnAt: itinerary === "oneWay" ? null : get().scheduledReturnAt
     });
   },
@@ -344,7 +344,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
     if (!(state.scheduledPickupAt instanceof Date) || Number.isNaN(state.scheduledPickupAt.getTime())) {
       return false;
     }
-    if (state.tripType === "hourly" && state.hourlyHours < 1) return false;
+    if (state.serviceType === "hourly" && state.hourlyHours < 1) return false;
     if (state.itinerary === "return") {
       if (!(state.scheduledReturnAt instanceof Date) || Number.isNaN(state.scheduledReturnAt.getTime())) {
         return false;
@@ -360,7 +360,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
     const availableAddons = filterAddonsForSelection(
       state.catalogAddons,
-      state.tripType,
+      state.serviceType,
       id
     );
     const cached = state.classQuotes[id] ?? null;
@@ -400,14 +400,14 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       const quote = await buildTripQuoteRemote({
         branchId,
-        tripType: state.tripType,
+        serviceType: state.serviceType,
         vehicleClassId,
         pickup: pickup.coordinate,
         dropoff: dropoff.coordinate,
         pickupAddressLine: pickup.addressLine,
         dropoffAddressLine: dropoff.addressLine,
         scheduledPickupAt: state.scheduledPickupAt,
-        bookedHours: state.tripType === "hourly" ? state.hourlyHours : null,
+        bookedHours: state.serviceType === "hourly" ? state.hourlyHours : null,
         addonIds: state.selectedAddonIds
       });
       if (requestId !== selectedQuoteSeq) return;
@@ -461,7 +461,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         throw error;
       }
 
-      const tripType = get().tripType;
+      const serviceType = get().serviceType;
       const passengers = get().passengers;
       const smallLuggage = get().smallLuggage;
       const largeLuggage = get().largeLuggage;
@@ -470,7 +470,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
         fetchDrivingRoute(pickup.coordinate, dropoff.coordinate),
         getBookingCatalog({
           branchId,
-          tripType,
+          serviceType,
           passengers,
           smallLuggage,
           largeLuggage
@@ -481,7 +481,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       const vehicleClasses = catalog.vehicleClasses;
       const bookable = filterEligibleVehicleClasses(vehicleClasses, {
-        tripType,
+        serviceType,
         passengers,
         smallLuggage,
         largeLuggage
@@ -494,7 +494,7 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       const availableAddons = filterAddonsForSelection(
         catalog.addons,
-        tripType,
+        serviceType,
         selectedVehicleClassId
       );
 
@@ -529,10 +529,10 @@ export const useBookingStore = create<BookingStore>((set, get) => ({
 
       set({ isQuoting: true });
       const scheduledPickupAt = get().scheduledPickupAt;
-      const bookedHours = tripType === "hourly" ? get().hourlyHours : null;
+      const bookedHours = serviceType === "hourly" ? get().hourlyHours : null;
       const quoteBase = {
         branchId,
-        tripType,
+        serviceType,
         pickup: pickup.coordinate,
         dropoff: dropoff.coordinate,
         pickupAddressLine: pickup.addressLine,

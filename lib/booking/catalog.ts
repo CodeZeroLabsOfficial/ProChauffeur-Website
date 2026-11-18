@@ -5,7 +5,7 @@ import { httpsCallable } from "firebase/functions";
 import { firebaseAuth, firebaseFunctions } from "@/lib/firebase/client";
 import type { Branch } from "@/lib/models/branch";
 import type { CoordinateField } from "@/lib/models/coordinate";
-import type { TripType } from "@/lib/models/enums";
+import { BOOKABLE_SERVICE_TYPES, type BookableServiceType, type ServiceType } from "@/lib/models/enums";
 import type { PricingAddon } from "@/lib/models/pricing";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
 
@@ -23,7 +23,7 @@ export type BookingCatalogResult = {
 
 export type GetBookingCatalogInput = {
   branchId?: string | null;
-  tripType?: TripType;
+  serviceType?: BookableServiceType;
   passengers?: number;
   smallLuggage?: number;
   largeLuggage?: number;
@@ -40,10 +40,19 @@ type RemoteCatalog = {
     id: string;
     title: string;
     price: number;
-    tripTypes?: TripType[];
+    serviceTypes?: ServiceType[];
     vehicleClassIds?: string[];
   }>;
 };
+
+function asServiceTypes(raw: unknown): ServiceType[] {
+  if (!Array.isArray(raw)) return [...BOOKABLE_SERVICE_TYPES];
+  const filtered = raw.filter(
+    (value): value is ServiceType =>
+      value === "transfer" || value === "hourly" || value === "round_trip"
+  );
+  return filtered.length > 0 ? filtered : [...BOOKABLE_SERVICE_TYPES];
+}
 
 function callableErrorMessage(error: unknown, fallback: string): string {
   const message =
@@ -73,7 +82,7 @@ export async function getBookingCatalog(
   try {
     result = await callable({
       branchId: input.branchId ?? null,
-      tripType: input.tripType,
+      serviceType: input.serviceType,
       passengers: input.passengers,
       smallLuggage: input.smallLuggage,
       largeLuggage: input.largeLuggage
@@ -88,8 +97,13 @@ export async function getBookingCatalog(
     title: addon.title,
     price: addon.price,
     isEnabled: true,
-    tripTypes: Array.isArray(addon.tripTypes) ? addon.tripTypes : [],
+    serviceTypes: asServiceTypes(addon.serviceTypes),
     vehicleClassIds: Array.isArray(addon.vehicleClassIds) ? addon.vehicleClassIds : []
+  }));
+
+  const vehicleClasses: VehicleClass[] = (data.vehicleClasses ?? []).map((row) => ({
+    ...row,
+    supportedServiceTypes: asServiceTypes(row.supportedServiceTypes)
   }));
 
   return {
@@ -98,7 +112,7 @@ export async function getBookingCatalog(
       country: data.mapbox?.country ?? null,
       proximity: data.mapbox?.proximity ?? null
     },
-    vehicleClasses: Array.isArray(data.vehicleClasses) ? data.vehicleClasses : [],
+    vehicleClasses,
     addons
   };
 }

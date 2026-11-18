@@ -1,5 +1,15 @@
-export const TRIP_TYPES = ["transfer", "hourly"] as const;
-export type TripType = (typeof TRIP_TYPES)[number];
+export const SERVICE_TYPES = ["transfer", "hourly", "round_trip"] as const;
+export type ServiceType = (typeof SERVICE_TYPES)[number];
+
+/** Bookable services on the customer website (return uses itinerary + transfer). */
+export const BOOKABLE_SERVICE_TYPES = ["transfer", "hourly"] as const;
+export type BookableServiceType = (typeof BOOKABLE_SERVICE_TYPES)[number];
+
+export const serviceTypeTitle: Record<ServiceType, string> = {
+  transfer: "Point-to-Point",
+  hourly: "Hourly",
+  round_trip: "Round trip"
+};
 
 export const TRIP_STATUSES = [
   "requested",

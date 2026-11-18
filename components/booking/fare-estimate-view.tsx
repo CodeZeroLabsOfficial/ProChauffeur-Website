@@ -22,7 +22,7 @@ type FareEstimateViewProps = {
     scheduledPickupAt?: string;
     scheduledReturnAt?: string;
     itinerary?: "oneWay" | "return";
-    tripType?: "transfer" | "hourly";
+    serviceType?: "transfer" | "hourly";
     hourlyHours?: number;
   };
 };

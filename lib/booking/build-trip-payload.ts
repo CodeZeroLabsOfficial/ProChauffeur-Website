@@ -1,7 +1,7 @@
 import type { SelectedPlace } from "@/lib/booking/booking-store";
 import type { PricingAddon } from "@/lib/models/pricing";
 import type { QuoteResult } from "@/lib/models/quote";
-import type { TripType } from "@/lib/models/enums";
+import type { BookableServiceType, ServiceType } from "@/lib/models/enums";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
 
 export type BookingTripPayload = {
@@ -17,14 +17,21 @@ export type BookingTripPayload = {
     luggage: { smallCount: number; largeCount: number };
   };
   journey: {
-    tripType: TripType;
+    serviceType: BookableServiceType;
     pickup: { latitude: number; longitude: number };
     dropoff: { latitude: number; longitude: number };
     pickupAddressLine: string;
     dropoffAddressLine: string;
     scheduledPickupAt: string;
     bookedHours: number | null;
-    bookingAddons: PricingAddon[];
+    bookingAddons: Array<{
+      id: string;
+      title: string;
+      price: number;
+      isEnabled: boolean;
+      serviceTypes: ServiceType[];
+      vehicleClassIds: string[];
+    }>;
     addonIds: string[];
     linkedTripID: string | null;
     notes: string | null;
@@ -59,7 +66,7 @@ export type BuildTripPayloadInput = {
   scheduledPickupAt: Date;
   scheduledReturnAt: Date | null;
   itinerary: "oneWay" | "return";
-  tripType: TripType;
+  serviceType: BookableServiceType;
   hourlyHours: number;
   passengers: number;
   smallLuggage: number;
@@ -102,7 +109,7 @@ function legPayload(
       }
     },
     journey: {
-      tripType: input.tripType,
+      serviceType: input.serviceType,
       pickup: {
         latitude: args.pickup.coordinate.latitude,
         longitude: args.pickup.coordinate.longitude
@@ -114,8 +121,15 @@ function legPayload(
       pickupAddressLine: args.pickup.addressLine,
       dropoffAddressLine: args.dropoff.addressLine,
       scheduledPickupAt: args.scheduledPickupAt.toISOString(),
-      bookedHours: input.tripType === "hourly" ? input.hourlyHours : null,
-      bookingAddons: input.selectedAddons,
+      bookedHours: input.serviceType === "hourly" ? input.hourlyHours : null,
+      bookingAddons: input.selectedAddons.map((addon) => ({
+        id: addon.id,
+        title: addon.title,
+        price: addon.price,
+        isEnabled: addon.isEnabled,
+        serviceTypes: addon.serviceTypes,
+        vehicleClassIds: addon.vehicleClassIds
+      })),
       addonIds: input.selectedAddons.map((addon) => addon.id),
       linkedTripID: args.linkedTripID,
       notes: null
@@ -146,7 +160,7 @@ function legPayload(
 export function buildTripPayloads(input: BuildTripPayloadInput): BookingTripPayload[] {
   const outboundId = newTripId();
   const isReturn =
-    input.tripType === "transfer" &&
+    input.serviceType === "transfer" &&
     input.itinerary === "return" &&
     input.scheduledReturnAt instanceof Date &&
     !Number.isNaN(input.scheduledReturnAt.getTime());

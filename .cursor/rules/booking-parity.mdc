@@ -19,7 +19,7 @@ Do not invent a parallel funnel (e.g. hotel check-in as the whole product). Mark
 ## Contracts
 
 - Same eligibility: enabled, visible, transfer support, capacity.
-- Same nouns and wire fields: trip, quote snapshot, `vehicleClassId`, `addonIds`, `scheduledPickupAt`.
+- Same nouns and wire fields: trip, quote snapshot, `serviceType`, `vehicleClassId`, `addonIds`, `scheduledPickupAt`.
 - Same disclaimer intent: amounts are estimates until booking confirms.
 - Adapt layout for web; do not change fare, trip, or payment outcomes.
 

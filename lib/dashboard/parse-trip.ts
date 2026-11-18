@@ -1,12 +1,23 @@
 import type { DocumentData } from "firebase/firestore";
 
 import { asDate, asDateRequired } from "@/lib/firebase/timestamps";
-import { TRIP_STATUSES, type TripStatus, type TripType } from "@/lib/models/enums";
+import {
+  SERVICE_TYPES,
+  TRIP_STATUSES,
+  type ServiceType,
+  type TripStatus
+} from "@/lib/models/enums";
 import type { PricingAddon } from "@/lib/models/pricing";
 import type { Trip } from "@/lib/models/trip";
 
 function asTripStatus(value: unknown): TripStatus {
   return TRIP_STATUSES.includes(value as TripStatus) ? (value as TripStatus) : "requested";
+}
+
+function asServiceType(value: unknown): ServiceType | null {
+  return typeof value === "string" && (SERVICE_TYPES as readonly string[]).includes(value)
+    ? (value as ServiceType)
+    : null;
 }
 
 function asCoordinate(raw: unknown) {
@@ -31,7 +42,9 @@ function asAddons(raw: unknown): PricingAddon[] | null {
         title,
         price: Number(row.price) || 0,
         isEnabled: row.isEnabled !== false,
-        tripTypes: Array.isArray(row.tripTypes) ? (row.tripTypes as TripType[]) : [],
+        serviceTypes: Array.isArray(row.serviceTypes)
+          ? (row.serviceTypes as ServiceType[])
+          : [],
         vehicleClassIds: Array.isArray(row.vehicleClassIds)
           ? (row.vehicleClassIds as string[])
           : []
@@ -110,7 +123,7 @@ export function parseTrip(id: string, data: DocumentData, branchId?: string | nu
       bookingAddons: asAddons(journey.bookingAddons),
       scheduledPickupAt: asDate(journey.scheduledPickupAt),
       linkedTripID: typeof journey.linkedTripID === "string" ? journey.linkedTripID : null,
-      tripType: typeof journey.tripType === "string" ? (journey.tripType as TripType) : null,
+      serviceType: asServiceType(journey.serviceType),
       bookedHours: typeof journey.bookedHours === "number" ? journey.bookedHours : null
     },
     quote: {

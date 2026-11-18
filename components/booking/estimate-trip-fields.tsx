@@ -33,7 +33,7 @@ export function EstimateTripFields({ className }: { className?: string }) {
   const dropoff = useBookingStore((s) => s.dropoff);
   const setPickup = useBookingStore((s) => s.setPickup);
   const setDropoff = useBookingStore((s) => s.setDropoff);
-  const tripType = useBookingStore((s) => s.tripType);
+  const serviceType = useBookingStore((s) => s.serviceType);
   const itinerary = useBookingStore((s) => s.itinerary);
   const scheduledPickupAt = useBookingStore((s) => s.scheduledPickupAt);
   const setScheduledPickupAt = useBookingStore((s) => s.setScheduledPickupAt);
@@ -48,7 +48,7 @@ export function EstimateTripFields({ className }: { className?: string }) {
   const [routeOpen, setRouteOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
-  const isTransfer = tripType === "transfer";
+  const isTransfer = serviceType === "transfer";
   const isReturn = isTransfer && itinerary === "return";
 
   useEffect(() => {

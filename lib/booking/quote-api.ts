@@ -4,12 +4,12 @@ import { httpsCallable } from "firebase/functions";
 
 import { firebaseAuth, firebaseFunctions } from "@/lib/firebase/client";
 import type { CoordinateField } from "@/lib/models/coordinate";
-import type { TripType } from "@/lib/models/enums";
+import type { BookableServiceType } from "@/lib/models/enums";
 import type { QuoteLineItem, QuoteResult } from "@/lib/models/quote";
 
 export type BuildTripQuoteInput = {
   branchId?: string | null;
-  tripType: TripType;
+  serviceType: BookableServiceType;
   vehicleClassId: string;
   pickup: CoordinateField;
   dropoff: CoordinateField;
@@ -37,7 +37,7 @@ export async function buildTripQuoteRemote(input: BuildTripQuoteInput): Promise<
       settlement: "card";
       trip: {
         journey: {
-          tripType: TripType;
+          serviceType: BookableServiceType;
           pickup: CoordinateField;
           dropoff: CoordinateField;
           pickupAddressLine: string;
@@ -60,7 +60,7 @@ export async function buildTripQuoteRemote(input: BuildTripQuoteInput): Promise<
       settlement: "card",
       trip: {
         journey: {
-          tripType: input.tripType,
+          serviceType: input.serviceType,
           pickup: input.pickup,
           dropoff: input.dropoff,
           pickupAddressLine: input.pickupAddressLine,

@@ -33,7 +33,7 @@ export function SummaryView() {
   const scheduledPickupAt = useBookingStore((s) => s.scheduledPickupAt);
   const scheduledReturnAt = useBookingStore((s) => s.scheduledReturnAt);
   const itinerary = useBookingStore((s) => s.itinerary);
-  const tripType = useBookingStore((s) => s.tripType);
+  const serviceType = useBookingStore((s) => s.serviceType);
   const hourlyHours = useBookingStore((s) => s.hourlyHours);
   const passengers = useBookingStore((s) => s.passengers);
   const smallLuggage = useBookingStore((s) => s.smallLuggage);
@@ -91,7 +91,7 @@ export function SummaryView() {
         scheduledPickupAt,
         scheduledReturnAt,
         itinerary,
-        tripType,
+        serviceType,
         hourlyHours,
         passengers,
         smallLuggage,
@@ -122,7 +122,7 @@ export function SummaryView() {
   const vehicleClass = selectedVehicleClass();
   const stripeConfigured = Boolean(getStripePublishableKey());
   const returnTotalHint =
-    tripType === "transfer" && itinerary === "return"
+    serviceType === "transfer" && itinerary === "return"
       ? "Return trip fare is recomputed at confirmation."
       : null;
 
@@ -167,7 +167,7 @@ export function SummaryView() {
             <p>
               <span className="text-muted-foreground">Trip</span>
               <br />
-              {tripType === "hourly"
+              {serviceType === "hourly"
                 ? `Hourly · ${hourlyHours}h`
                 : itinerary === "return"
                   ? "Transfer · Return"

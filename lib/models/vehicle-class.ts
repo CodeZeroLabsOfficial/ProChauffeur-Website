@@ -1,4 +1,4 @@
-import type { TripType } from "@/lib/models/enums";
+import type { ServiceType } from "@/lib/models/enums";
 
 export type VehicleClassLuggageCapacity = {
   smallCount: number;
@@ -29,5 +29,5 @@ export type VehicleClass = {
   imageUrl?: string | null;
   isEnabled: boolean;
   isVisible: boolean;
-  supportedTripTypes: TripType[];
+  supportedServiceTypes: ServiceType[];
 };

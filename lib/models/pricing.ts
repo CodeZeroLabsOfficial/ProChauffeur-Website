@@ -1,10 +1,10 @@
-import type { TripType } from "@/lib/models/enums";
+import type { ServiceType } from "@/lib/models/enums";
 
 export type PricingAddon = {
   id: string;
   title: string;
   price: number;
   isEnabled: boolean;
-  tripTypes: TripType[];
+  serviceTypes: ServiceType[];
   vehicleClassIds: string[];
 };

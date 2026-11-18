@@ -13,7 +13,7 @@ alwaysApply: true
 
 ## Data
 
-- Vehicle classes: public read OK; always filter `isEnabled` + `isVisible` + capacity + trip type.
+- Vehicle classes: public read OK; always filter `isEnabled` + `isVisible` + capacity + service type.
 - Pricing / add-ons: only via authenticated session (including anonymous) or sanitized server paths — do not open full pricing internals to the anonymous web without auth.
 - Fare math stays on the server (`buildTripQuote`). Never trust client totals at checkout.
 - No service-account keys or Stripe secrets in this app’s client bundle.

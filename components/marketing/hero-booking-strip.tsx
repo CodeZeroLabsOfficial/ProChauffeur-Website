@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getBookingCatalog, type OperatingMapboxContext } from "@/lib/booking/catalog";
 import type { SelectedPlace } from "@/lib/booking/booking-store";
 import { ensureAnonymousAuth } from "@/lib/firebase/ensure-anonymous";
-import type { TripType } from "@/lib/models/enums";
+import type { BookableServiceType } from "@/lib/models/enums";
 import { cn } from "@/lib/utils";
 
 type Itinerary = "oneWay" | "return";
@@ -45,7 +45,7 @@ const dateTimeFieldClass =
 
 export function HeroBookingStrip() {
   const router = useRouter();
-  const [tripType, setTripType] = useState<TripType>("transfer");
+  const [serviceType, setServiceType] = useState<BookableServiceType>("transfer");
   const [itinerary, setItinerary] = useState<Itinerary>("oneWay");
   const [itineraryOpen, setItineraryOpen] = useState(false);
   const [pickup, setPickup] = useState<SelectedPlace | null>(null);
@@ -84,7 +84,7 @@ export function HeroBookingStrip() {
     };
   }, []);
 
-  const isTransfer = tripType === "transfer";
+  const isTransfer = serviceType === "transfer";
   const isReturn = isTransfer && itinerary === "return";
   const transferLabel = itinerary === "return" ? "Return" : "One-way";
 
@@ -112,7 +112,7 @@ export function HeroBookingStrip() {
   }, [isTransfer, transferLabel]);
 
   function selectTransferItinerary(next: Itinerary) {
-    setTripType("transfer");
+    setServiceType("transfer");
     setItinerary(next);
     if (next === "return") {
       setScheduledReturnAt(defaultReturnDate(scheduledPickupAt));
@@ -130,7 +130,7 @@ export function HeroBookingStrip() {
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const params = new URLSearchParams();
-    params.set("tripType", tripType);
+    params.set("serviceType", serviceType);
     if (isTransfer) params.set("itinerary", itinerary);
     const pickupValue = (pickup?.addressLine || pickupText).trim();
     const dropoffValue = (dropoff?.addressLine || dropoffText).trim();
@@ -151,7 +151,7 @@ export function HeroBookingStrip() {
       <div
         ref={groupRef}
         role="group"
-        aria-label="Trip type"
+        aria-label="Service type"
         className="relative inline-flex rounded-full border border-white/20 bg-black/40 p-1 backdrop-blur-md">
         <span
           aria-hidden
@@ -196,7 +196,7 @@ export function HeroBookingStrip() {
                 return;
               }
               openItineraryFromChevronRef.current = false;
-              setTripType("transfer");
+              setServiceType("transfer");
               setItineraryOpen(false);
             }}>
             {transferLabel}
@@ -236,7 +236,7 @@ export function HeroBookingStrip() {
             !isTransfer ? "text-neutral-950" : "text-white/80 hover:text-white"
           )}
           onClick={() => {
-            setTripType("hourly");
+            setServiceType("hourly");
             setItineraryOpen(false);
           }}>
           Hourly
@@ -245,7 +245,7 @@ export function HeroBookingStrip() {
 
       <div className="w-full border border-white/20 bg-black/35 p-3 backdrop-blur-md sm:p-2">
         <div
-          key={`${tripType}-${itinerary}`}
+          key={`${serviceType}-${itinerary}`}
           className="animate-hero-fields flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-0">
           <AddressSearchField
             id="hero-pickup"

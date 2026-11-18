@@ -1,4 +1,4 @@
-import type { PaymentStatus, TripStatus, TripType } from "@/lib/models/enums";
+import type { PaymentStatus, ServiceType, TripStatus } from "@/lib/models/enums";
 import type { PricingAddon } from "@/lib/models/pricing";
 import type { CoordinateField } from "@/lib/models/coordinate";
 
@@ -28,7 +28,7 @@ export type TripJourney = {
   bookingAddons?: PricingAddon[] | null;
   scheduledPickupAt?: Date | null;
   linkedTripID?: string | null;
-  tripType?: TripType | null;
+  serviceType?: ServiceType | null;
   bookedHours?: number | null;
 };
 

@@ -8,7 +8,7 @@ type BookPageProps = {
     scheduledPickupAt?: string;
     scheduledReturnAt?: string;
     itinerary?: string;
-    tripType?: string;
+    serviceType?: string;
     hourlyHours?: string;
   }>;
 };
@@ -26,7 +26,7 @@ export default async function BookPage({ searchParams }: BookPageProps) {
           scheduledPickupAt: params.scheduledPickupAt,
           scheduledReturnAt: params.scheduledReturnAt,
           itinerary: params.itinerary === "return" ? "return" : "oneWay",
-          tripType: params.tripType === "hourly" ? "hourly" : "transfer",
+          serviceType: params.serviceType === "hourly" ? "hourly" : "transfer",
           hourlyHours:
             typeof hourlyHours === "number" && Number.isFinite(hourlyHours)
               ? hourlyHours

@@ -1,8 +1,8 @@
-import type { TripType } from "@/lib/models/enums";
+import type { BookableServiceType } from "@/lib/models/enums";
 import type { VehicleClass } from "@/lib/models/vehicle-class";
 
 export type BookingRequirements = {
-  tripType: TripType;
+  serviceType: BookableServiceType;
   passengers: number;
   smallLuggage: number;
   largeLuggage: number;
@@ -28,7 +28,9 @@ export function filterEligibleVehicleClasses(
     .filter((vehicleClass) => {
       if (!vehicleClass.isEnabled) return false;
       if (!vehicleClass.isVisible) return false;
-      if (!vehicleClass.supportedTripTypes.includes(requirements.tripType)) return false;
+      if (!(vehicleClass.supportedServiceTypes ?? []).includes(requirements.serviceType)) {
+        return false;
+      }
       if (!vehicleClassMeetsCapacity(vehicleClass, requirements)) return false;
       return true;
     })

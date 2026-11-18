@@ -53,7 +53,7 @@ Confirm uses `createTripCardPayment` (requires customer role). OTP verify provis
 
 ## Data
 
-- **Catalog** — `getBookingCatalog` returns sanitized branches, mapbox context, eligible vehicle classes, and add-ons (Admin SDK; filters enabled/visible/capacity/trip type)
+- **Catalog** — `getBookingCatalog` returns sanitized branches, mapbox context, eligible vehicle classes, and add-ons (Admin SDK; filters enabled/visible/capacity/service type)
 - **Quotes** — `buildTripQuote` (server fare math)
 - **Trips / payments** — same callables and document shapes as other clients (`journey.dropoff`, `scheduledPickupAt`, `vehicleClassId`, `addonIds` / `bookingAddons`, `capacity`)
 - **Dashboard history** — customer-owned trips via Firestore collection group; Stripe receipt link on trip (`billing.stripeReceiptUrl` written by `stripeWebhook`); saved cards via `manageSavedCards`

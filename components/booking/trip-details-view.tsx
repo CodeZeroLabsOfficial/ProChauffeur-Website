@@ -15,7 +15,7 @@ export function TripDetailsView() {
   const router = useRouter();
   const allowed = useBookingGuard("estimate");
 
-  const tripType = useBookingStore((s) => s.tripType);
+  const serviceType = useBookingStore((s) => s.serviceType);
   const itinerary = useBookingStore((s) => s.itinerary);
   const setItinerary = useBookingStore((s) => s.setItinerary);
   const scheduledPickupAt = useBookingStore((s) => s.scheduledPickupAt);
@@ -60,7 +60,7 @@ export function TripDetailsView() {
         </div>
 
         <div className="space-y-8">
-          {tripType === "transfer" ? (
+          {serviceType === "transfer" ? (
             <section className="space-y-3">
               <h2 className="text-lg font-medium">Itinerary</h2>
               <div className="grid grid-cols-2 gap-2">
@@ -108,7 +108,7 @@ export function TripDetailsView() {
                 minDate={new Date()}
                 variant="plain"
               />
-              {tripType === "transfer" && itinerary === "return" && scheduledReturnAt ? (
+              {serviceType === "transfer" && itinerary === "return" && scheduledReturnAt ? (
                 <HeroDateTimeField
                   id="details-return"
                   label="Return"
@@ -118,7 +118,7 @@ export function TripDetailsView() {
                   variant="plain"
                 />
               ) : null}
-              {tripType === "hourly" ? (
+              {serviceType === "hourly" ? (
                 <QuantityStepper
                   id="hourly-hours"
                   label="Hours"

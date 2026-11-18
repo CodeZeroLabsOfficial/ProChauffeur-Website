@@ -41,8 +41,9 @@ Keep marketing, booking, and dashboard code separate. Do not put domain logic in
 | Customer | role `customer`, `customerID` on trips | Using “guest” for fare fields |
 | Guest | anonymous session only (`isGuest`) | Guest as trip headcount |
 | Trip / booking | `trips/{id}`, booking flow | `order`, `cart`, `reservation` as schema |
+| Service (transfer / hourly) | `serviceType`, `supportedServiceTypes`, `serviceTypes` | `tripType`, `supportedTripTypes`, `tripTypes` for this axis |
 
-Wire field names stay one-word / product-canonical (`dropoff`, not `drop_off`). Format labels for display separately.
+Wire field names stay one-word / product-canonical (`dropoff`, not `drop_off`). Format labels for display separately. Keep **Trip** for the booking document; use **Service** for transfer vs hourly.
 
 ## Code style (common web standards)
 

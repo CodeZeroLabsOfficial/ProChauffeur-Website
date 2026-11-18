@@ -16,7 +16,7 @@ const SERVICES = [
     description:
       "Flight-aware pickup, meet-and-greet when you land, and a clear path from terminal to destination.",
     image: "/services/service-airport-transfers.jpg",
-    href: "/booking?tripType=transfer"
+    href: "/booking?serviceType=transfer"
   },
   {
     id: "point-to-point",
@@ -24,7 +24,7 @@ const SERVICES = [
     description:
       "Door-to-door across town with a set pickup time and a fare you see before you ride.",
     image: "/services/service-point-to-point.jpg",
-    href: "/booking?tripType=transfer"
+    href: "/booking?serviceType=transfer"
   },
   {
     id: "hourly-charter",
@@ -32,7 +32,7 @@ const SERVICES = [
     description:
       "One chauffeur for the afternoon—meetings, stops, and the spaces in between.",
     image: "/services/service-hourly-charter.jpg",
-    href: "/booking?tripType=hourly"
+    href: "/booking?serviceType=hourly"
   },
   {
     id: "corporate-transfers",
@@ -40,7 +40,7 @@ const SERVICES = [
     description:
       "Corporate accounts for executive travel, client pickups, and simplified billing across your team.",
     image: "/services/service-corporate-transfers.jpg",
-    href: "/booking?tripType=transfer"
+    href: "/booking?serviceType=transfer"
   }
 ] as const;
 
@@ -144,12 +144,12 @@ export function MarketingServices() {
       id="services"
       className="bg-background flex min-h-[100svh] scroll-mt-16 flex-col px-4 py-14 sm:px-6 sm:py-20">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col">
-        <header className="mb-8 max-w-xl shrink-0 space-y-3 lg:mb-12">
+        <header className="mb-8 shrink-0 space-y-3 lg:mb-12">
           <h2 className="font-display text-4xl tracking-tight text-balance sm:text-5xl">
-            Travel that fits the day.
+            Chauffeur Services for Every Journey.
           </h2>
           <p className="text-muted-foreground text-base text-balance sm:text-lg">
-            Airport, city, or by the hour—your journey starts here.
+            Professional chauffeur services for airport travel, business journeys, private occasions and events.
           </p>
         </header>
 
