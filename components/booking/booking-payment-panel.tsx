@@ -2,7 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { StripePaymentForm, type StripePaymentConfirmHandle } from "@/components/booking/stripe-payment-form";
+import {
+  StripePaymentForm,
+  type StripePaymentConfirmHandle
+} from "@/components/booking/stripe-payment-form";
 import { listenSavedCards } from "@/lib/dashboard/saved-cards";
 import type { SavedPaymentMethod } from "@/lib/models/saved-payment-method";
 import { cn } from "@/lib/utils";
@@ -14,6 +17,7 @@ export type PaymentSelection =
 type BookingPaymentPanelProps = {
   uid: string;
   clientSecret: string | null;
+  isPreparingCard: boolean;
   saveCard: boolean;
   onSaveCardChange: (save: boolean) => void;
   selection: PaymentSelection;
@@ -22,9 +26,17 @@ type BookingPaymentPanelProps = {
   onPaymentError: (message: string) => void;
 };
 
+function selectionClass(selected: boolean) {
+  return cn(
+    "w-full rounded-lg border-2 bg-background text-left text-sm transition-colors",
+    selected ? "border-foreground" : "border-border hover:bg-muted"
+  );
+}
+
 export function BookingPaymentPanel({
   uid,
   clientSecret,
+  isPreparingCard,
   saveCard,
   onSaveCardChange,
   selection,
@@ -62,6 +74,8 @@ export function BookingPaymentPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards, cardsReady]);
 
+  const newSelected = selection.mode === "new";
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -91,67 +105,60 @@ export function BookingPaymentPanel({
                       paymentMethodId: card.stripePaymentMethodId
                     })
                   }
-                  className={cn(
-                    "border-border w-full border px-4 py-3 text-left text-sm transition-colors",
-                    selected ? "bg-foreground text-background" : "bg-background hover:bg-muted"
-                  )}>
+                  className={cn(selectionClass(selected), "px-4 py-3")}>
                   <p className="font-medium">{card.displayLabel}</p>
-                  <p className={cn("mt-1 text-xs", selected ? "text-background/75" : "text-muted-foreground")}>
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Expires {String(card.expMonth).padStart(2, "0")}/{card.expYear}
                     {card.isDefault ? " · Default" : ""}
                   </p>
                 </button>
               );
             })}
-            <button
-              type="button"
-              onClick={() => onSelectionChange({ mode: "new" })}
-              className={cn(
-                "border-border w-full border px-4 py-3 text-left text-sm transition-colors",
-                selection.mode === "new"
-                  ? "bg-foreground text-background"
-                  : "bg-background hover:bg-muted"
-              )}>
-              <p className="font-medium">Pay with a new card</p>
-              <p
-                className={cn(
-                  "mt-1 text-xs",
-                  selection.mode === "new" ? "text-background/75" : "text-muted-foreground"
-                )}>
-                Visa, Mastercard, and other cards accepted at confirmation.
-              </p>
-            </button>
+
+            <div className={cn(selectionClass(newSelected), "overflow-hidden")}>
+              <button
+                type="button"
+                onClick={() => onSelectionChange({ mode: "new" })}
+                className="w-full px-4 py-3 text-left">
+                <p className="font-medium">Pay with a new card</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Visa, Mastercard, and other cards accepted at confirmation.
+                </p>
+              </button>
+
+              {newSelected ? (
+                <div className="border-border space-y-4 border-t px-4 py-4">
+                  <h4 className="text-sm font-medium">Card details</h4>
+                  {clientSecret ? (
+                    <>
+                      <StripePaymentForm
+                        ref={paymentFormRef}
+                        clientSecret={clientSecret}
+                        onError={onPaymentError}
+                      />
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={saveCard}
+                          onChange={(event) => onSaveCardChange(event.target.checked)}
+                          className="size-4"
+                        />
+                        <span>Save this card for next time</span>
+                      </label>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      {isPreparingCard
+                        ? "Preparing card form…"
+                        : "Could not load card form. Try selecting this option again."}
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
       </section>
-
-      {selection.mode === "new" ? (
-        <section className="space-y-3">
-          <h3 className="text-lg font-medium">Card details</h3>
-          {clientSecret ? (
-            <>
-              <StripePaymentForm
-                ref={paymentFormRef}
-                clientSecret={clientSecret}
-                onError={onPaymentError}
-              />
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={saveCard}
-                  onChange={(event) => onSaveCardChange(event.target.checked)}
-                  className="size-4"
-                />
-                <span>Save this card for next time</span>
-              </label>
-            </>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              Press Book now to enter card details and complete payment.
-            </p>
-          )}
-        </section>
-      ) : null}
     </div>
   );
 }

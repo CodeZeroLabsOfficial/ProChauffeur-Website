@@ -61,9 +61,11 @@ export function SummaryView() {
   const [error, setError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [tripId, setTripId] = useState<string | null>(null);
+  const [isPreparingCard, setIsPreparingCard] = useState(false);
   const [saveCard, setSaveCard] = useState(false);
   const [selection, setSelection] = useState<PaymentSelection>({ mode: "new" });
   const paymentFormRef = useRef<StripePaymentConfirmHandle | null>(null);
+  const prepareSeq = useRef(0);
 
   useEffect(() => {
     if (!ready) void bootstrap();
@@ -88,6 +90,85 @@ export function SummaryView() {
     setClientSecret(null);
     setTripId(null);
   }, [selection]);
+
+  useEffect(() => {
+    if (!allowed || !authReady || !emailAuthed) return;
+    if (selection.mode !== "new") return;
+    if (clientSecret) return;
+    if (!getStripePublishableKey()) return;
+
+    const user = firebaseAuth().currentUser;
+    const vehicleClass = selectedVehicleClass();
+    if (!user || !isEmailAuthenticatedUser(user) || !pickup || !dropoff || !quote || !vehicleClass) {
+      return;
+    }
+
+    const seq = ++prepareSeq.current;
+    setIsPreparingCard(true);
+    setError(null);
+
+    const selectedAddons = availableAddons.filter((addon) => selectedAddonIds.includes(addon.id));
+    const trips = buildTripPayloads({
+      customerId: user.uid,
+      customerEmail: user.email ?? null,
+      customerDisplayName: user.displayName ?? user.email?.split("@")[0] ?? null,
+      pickup,
+      dropoff,
+      scheduledPickupAt,
+      scheduledReturnAt,
+      itinerary,
+      serviceType,
+      hourlyHours,
+      passengers,
+      smallLuggage,
+      largeLuggage,
+      vehicleClass,
+      selectedAddons,
+      quote
+    });
+
+    void createTripCardPayment({ trips, saveCard })
+      .then((payment) => {
+        if (seq !== prepareSeq.current) return;
+        setClientSecret(payment.clientSecret);
+        setTripId(payment.tripId);
+      })
+      .catch((err) => {
+        if (seq !== prepareSeq.current) return;
+        setError(err instanceof TripPaymentError ? err.message : "Could not prepare card payment.");
+      })
+      .finally(() => {
+        if (seq !== prepareSeq.current) return;
+        setIsPreparingCard(false);
+      });
+  }, [
+    allowed,
+    authReady,
+    emailAuthed,
+    selection,
+    clientSecret,
+    saveCard,
+    pickup,
+    dropoff,
+    quote,
+    scheduledPickupAt,
+    scheduledReturnAt,
+    itinerary,
+    serviceType,
+    hourlyHours,
+    passengers,
+    smallLuggage,
+    largeLuggage,
+    availableAddons,
+    selectedAddonIds,
+    selectedVehicleClass
+  ]);
+
+  function handleSaveCardChange(next: boolean) {
+    setSaveCard(next);
+    setClientSecret(null);
+    setTripId(null);
+  }
 
   async function handleBookNow() {
     const user = firebaseAuth().currentUser;
@@ -146,19 +227,14 @@ export function SummaryView() {
       }
 
       if (!clientSecret) {
-        const payment = await createTripCardPayment({
-          trips,
-          saveCard
-        });
-        setClientSecret(payment.clientSecret);
-        setTripId(payment.tripId);
+        setError("Card form is still preparing. Try again in a moment.");
         return;
       }
 
       const confirmed = await paymentFormRef.current?.confirm();
       if (!confirmed) {
         if (!paymentFormRef.current) {
-          setError("Enter your card details, then press Book now again.");
+          setError("Enter your card details, then press Book now.");
         }
         return;
       }
@@ -201,8 +277,9 @@ export function SummaryView() {
             <BookingPaymentPanel
               uid={uid}
               clientSecret={clientSecret}
+              isPreparingCard={isPreparingCard}
               saveCard={saveCard}
-              onSaveCardChange={setSaveCard}
+              onSaveCardChange={handleSaveCardChange}
               selection={selection}
               onSelectionChange={setSelection}
               paymentFormRef={paymentFormRef}
@@ -249,18 +326,22 @@ export function SummaryView() {
 
           <Link
             href="/booking"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "hidden w-full lg:inline-flex")}>
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "hidden w-full lg:inline-flex"
+            )}>
             Back to estimate
           </Link>
 
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || (selection.mode === "new" && (!clientSecret || isPreparingCard))}
             onClick={() => void handleBookNow()}
             className={cn(
               buttonVariants({ size: "lg" }),
               "hidden w-full justify-between lg:inline-flex",
-              busy && "opacity-45"
+              (busy || (selection.mode === "new" && (!clientSecret || isPreparingCard))) &&
+                "opacity-45"
             )}>
             <span>{busy ? "Booking…" : "Book now"}</span>
             <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
@@ -277,12 +358,13 @@ export function SummaryView() {
           </Link>
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || (selection.mode === "new" && (!clientSecret || isPreparingCard))}
             onClick={() => void handleBookNow()}
             className={cn(
               buttonVariants({ size: "lg" }),
               "flex-1 justify-between",
-              busy && "opacity-45"
+              (busy || (selection.mode === "new" && (!clientSecret || isPreparingCard))) &&
+                "opacity-45"
             )}>
             <span>{busy ? "Booking…" : "Book now"}</span>
             <span>{quote ? formatMoney(quote.displayTotal, quote.currencyCode) : "—"}</span>
