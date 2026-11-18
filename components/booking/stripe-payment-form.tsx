@@ -64,7 +64,10 @@ const StripePaymentFields = forwardRef<StripePaymentConfirmHandle, StripePayment
 
     return (
       <div className="space-y-4">
-        <PaymentElement onReady={() => setReady(true)} />
+        <PaymentElement
+          options={{ wallets: { link: "never" } }}
+          onReady={() => setReady(true)}
+        />
         {!ready ? (
           <p className="text-muted-foreground text-sm">Loading card form…</p>
         ) : null}

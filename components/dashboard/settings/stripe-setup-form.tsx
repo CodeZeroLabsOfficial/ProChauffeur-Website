@@ -58,7 +58,7 @@ function SetupCardInner({
 
   return (
     <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
-      <PaymentElement />
+      <PaymentElement options={{ wallets: { link: "never" } }} />
       <Button type="submit" disabled={!stripe || busy}>
         {busy ? "Saving…" : "Save card"}
       </Button>
