@@ -14,6 +14,17 @@ export type CreateTripCardPaymentResult = {
   stripeCustomerId?: string;
 };
 
+type PaymentsCreateCardPaymentResponse = {
+  clientSecret?: string;
+  providerPaymentId?: string;
+  tripId?: string;
+  tripIds?: string[];
+  branchId?: string;
+  providerCustomerId?: string;
+  provider?: string;
+  publishableKey?: string;
+};
+
 export class TripPaymentError extends Error {
   constructor(message: string) {
     super(message);
@@ -43,23 +54,34 @@ export async function createTripCardPayment(input: {
   const callable = httpsCallable<
     {
       trips: BookingTripPayload[];
-      paymentMethodId?: string | null;
+      providerMethodId?: string | null;
       saveCard?: boolean;
     },
-    CreateTripCardPaymentResult
-  >(firebaseFunctions(), "createTripCardPayment");
+    PaymentsCreateCardPaymentResponse
+  >(firebaseFunctions(), "paymentsCreateCardPayment");
 
   try {
     const result = await callable({
       trips: input.trips,
-      paymentMethodId: input.paymentMethodId ?? null,
+      providerMethodId: input.paymentMethodId ?? null,
       saveCard: Boolean(input.saveCard)
     });
     const data = result.data;
-    if (!data?.clientSecret?.trim() || !data.tripId?.trim()) {
+    const clientSecret = data?.clientSecret?.trim() ?? "";
+    const tripId = data?.tripId?.trim() ?? "";
+    const paymentIntentId = data?.providerPaymentId?.trim() ?? "";
+    if (!clientSecret || !tripId || !paymentIntentId) {
       throw new TripPaymentError("Payment could not be started.");
     }
-    return data;
+    return {
+      clientSecret,
+      paymentIntentId,
+      tripId,
+      tripIds: Array.isArray(data.tripIds) ? data.tripIds : [tripId],
+      branchId: typeof data.branchId === "string" ? data.branchId : "",
+      stripeCustomerId:
+        typeof data.providerCustomerId === "string" ? data.providerCustomerId : undefined
+    };
   } catch (error) {
     if (error instanceof TripPaymentError) throw error;
     throw new TripPaymentError(friendlyMessage(error, "Payment could not be started."));

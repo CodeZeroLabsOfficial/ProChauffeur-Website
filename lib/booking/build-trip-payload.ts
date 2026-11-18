@@ -156,7 +156,7 @@ function legPayload(
   };
 }
 
-/** Builds one or two pending trip docs matching createTripCardPayment contract. */
+/** Builds one or two pending trip docs matching paymentsCreateCardPayment contract. */
 export function buildTripPayloads(input: BuildTripPayloadInput): BookingTripPayload[] {
   const outboundId = newTripId();
   const isReturn =

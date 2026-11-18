@@ -13,7 +13,7 @@ Customer-facing Elite Chauffeurs site: marketing pages, booking funnel matching 
 
 1. **Fare estimate** (`/booking`) — pickup, drop-off, schedule, passengers, vehicle class, luggage, add-ons, quote. Hero and header trip strip seed/edit journey fields (including one-way / return and passengers).
 2. **Email login / sign-up** (`/login?redirect=/booking/summary`) — when the session is not an email customer
-3. **Summary** (`/booking/summary`) — payment (saved card or new card) + map/fare aside, single Book now → `createTripCardPayment` + Stripe confirm
+3. **Summary** (`/booking/summary`) — payment (saved card or new card) + map/fare aside, single Book now → `paymentsCreateCardPayment` + Stripe confirm
 4. **Confirmed** (`/booking/confirmed`) — success
 
 Legacy `/book` URLs redirect to `/booking`. Marketing hero may pre-fill estimate entry fields; it is not a separate booking product. Journey fields persist in `sessionStorage` across the login round-trip.
@@ -48,7 +48,7 @@ Catalog and Mapbox country/proximity load via callable `getBookingCatalog` (Anon
 
 Retail quotes use `buildTripQuote`. Authenticated callers without a `users/{uid}` profile (anonymous web sessions) get **card/retail-only** pricing. Redeploy Functions after that handler change.
 
-Confirm uses `createTripCardPayment` (requires customer role). OTP verify provisions `users/{uid}` with `role: customer` when needed.
+Confirm uses `paymentsCreateCardPayment` (requires customer role). OTP verify provisions `users/{uid}` with `role: customer` when needed.
 
 ## Data
 
@@ -64,7 +64,7 @@ Location (UI) = `branchId` in code. Do not call staff portal HTTP APIs from this
 - Fail fast on missing Firebase / Mapbox env; Stripe publishable key optional until checkout / saved cards
 - No service-account or Stripe secret keys in the client bundle
 - Do not log addresses, phones, or payment refs
-- Client totals are display-only; server recomputes fare on `createTripCardPayment`
+- Client totals are display-only; server recomputes fare on `paymentsCreateCardPayment`
 - Booking steps guard incomplete state and send users back to `/booking`; guests are sent to `/login` before Summary pay
 - No public Firestore rules for anonymous catalog reads
 
